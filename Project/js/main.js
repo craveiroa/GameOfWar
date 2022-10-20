@@ -1,5 +1,8 @@
-import '../style.css'
+import '../style.css';
 import * as THREE from 'three';
+
+import {Deck} from './deck';
+import {StandardDeck} from './standardDeck';
 
 let scene, camera, renderer;
 
@@ -21,6 +24,13 @@ function loadAssets() {
 } //end of loadAssets
 
 function initLogic() {
+  let myDeck = new StandardDeck();
+
+  console.log(myDeck);
+
+  myDeck.shuffle();
+
+  console.log(myDeck);
 
 } //end of initLogic
 
