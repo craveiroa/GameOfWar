@@ -12,7 +12,11 @@ let gameCanvas = document.getElementById('gameOfWar');
 
 let cardGeometry, cardMaterial;
 
-let myDeck;
+let myDeck, otherDeck;
+
+let myDeckModel, otherDeckModel;
+
+let testTween;
 
 const CARD_THICKNESS = 0.00024;
 
@@ -48,10 +52,12 @@ function loadAssets() {
  */
 function initLogic() {
   myDeck = new StandardDeck();
+  otherDeck = new Deck();
   
   myDeck.shuffle();
 
   console.log(myDeck);
+  console.log(otherDeck);
 
 } //end of initLogic
 
@@ -125,9 +131,33 @@ function initGraphics() {
 
   //Geometry
 
-  let deckModel = createDeckModel(myDeck)
-  deckModel.rotateX(Math.PI/2);
-  scene.add(deckModel);
+  myDeckModel = createDeckModel(myDeck)
+  myDeckModel.rotateX(Math.PI/2);
+  myDeckModel.position.x -= 0.1;
+
+  scene.add(myDeckModel);
+
+  otherDeckModel = createDeckModel(otherDeck);
+  otherDeckModel.rotateX(Math.PI/2);
+  otherDeckModel.position.x += 0.1;
+
+  scene.add(otherDeckModel);
+
+  testTween = new TWEEN.Tween({
+    x: myDeckModel.position.x,
+    y: myDeckModel.position.y,
+    z: myDeckModel.position.z});
+  testTween.to({
+    x: otherDeckModel.position.x,
+    y: otherDeckModel.position.y,
+    z: otherDeckModel.position.z
+  }, 2000);
+  testTween.onUpdate((coords) => {
+    myDeckModel.position.x = coords.x;
+    myDeckModel.position.y = coords.y;
+    myDeckModel.position.z = coords.z;
+  });
+  testTween.easing(TWEEN.Easing.Exponential.InOut)
 
   //let tableGeometry = new THREE.BoxGeometry(2, 0.05, 0.5);
 
@@ -159,15 +189,24 @@ function initGraphics() {
  * with the view.
  */
 function initController() {
-
+  document.onkeydown = function (e) {
+    switch (e.key) {
+      case 'n':
+        testTween.start();
+      break;
+    }
+  }
 } //end of initController
 
 /**
  * This is where the game and its events occur
  */
-function gameLoop() {
+function gameLoop(t) {
 
+  TWEEN.update(t);
   render();
+  
+  window.requestAnimationFrame(gameLoop);
 
 } //end of gameLoop
 
