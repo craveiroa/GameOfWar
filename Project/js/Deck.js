@@ -1,4 +1,5 @@
 import { Card } from "./card";
+import * as THREE from 'three';
 
 /**
  * This is the Deck Class. It stores an array of 0
@@ -7,10 +8,14 @@ import { Card } from "./card";
  */
 export class Deck {
 
+    model;
+    cards; 
+
     /**
      * Generates an empty Deck
      */
     constructor() {
+        this.model = new THREE.Group();
         this.cards = [];
     }
 
@@ -27,7 +32,7 @@ export class Deck {
      * @returns true if deckSize = 0, false otherwise
      */
     isEmpty() {
-        return (this.cards.length == 0)
+        return (this.getSize() == 0)
     }
 
     /**
@@ -36,7 +41,7 @@ export class Deck {
      */
     peekTop() {
         if (!this.isEmpty())
-            return cards[this.cards.length - 1];
+            return this.cards[this.cards.length - 1];
         else
             console.error('Deck is empty, nothing to peek at')
 
@@ -49,10 +54,9 @@ export class Deck {
      */
     peekBottom() {
         if (!this.isEmpty())
-            return cards[0];
+            return this.cards[0];
         else
             console.error('Deck is empty, nothing to peek at')
-
         return undefined;
     }
 
@@ -61,8 +65,11 @@ export class Deck {
      * @returns {Card} Card
      */
     takeTop() {
-        if (!this.isEmpty())
-            return this.cards.pop();
+        if (!this.isEmpty()) {
+            let card = this.cards.pop();
+            this.model.remove(card.model);
+            return card;
+        }
         else
             console.error('Deck is empty, nothing to take')
         return undefined;
@@ -73,8 +80,11 @@ export class Deck {
      * @returns {Card} Card
      */
     takeBottom() {
-        if (!this.isEmpty())
-            return this.cards.shift();
+        if (!this.isEmpty()) {
+            let card = this.cards.shift();
+            this.model.remove(card.model);
+            return card;
+        }
         else
             console.error('Deck is empty, nothing to take')
         return undefined;
@@ -86,6 +96,10 @@ export class Deck {
      */
     addTop(card) {
         this.cards.push(card);
+        
+        let cardModel = card.model;
+        cardModel.position.set(0,0, card.DIMENSIONS.z * this.cards.length);
+        this.model.add(cardModel);
     }
 
     /**
@@ -94,6 +108,11 @@ export class Deck {
      */
     addBottom(card) {
         this.cards.unshift(card);
+
+        for (let i = 0; i < this.getSize(); i++ )
+            cards[i].model.position.set(0,0, card.DIMENSIONS.z * i);
+ 
+        this.model.add(cardModel);
     }
 
     /**

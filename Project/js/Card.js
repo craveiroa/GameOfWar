@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 /**
  * This is the card class. It stores basic information about
  * suit and value. Cards should be immutable, so value and suit should not be 
@@ -7,17 +8,25 @@
  */
 export class Card {
 
-    VALUE;
-    SUIT;
+    value;
+    suit;
+    model;
+    DIMENSIONS = new THREE.Vector3(0.0571, 0.0829, 0.00024);
 
     /**
      * Constructs a new Card Object
      * @param {number} value the cards numerical value, see Constants for Value Constants 
      * @param {number} suit the cards suit, see Deck for Constants Suit Constants
      */
-    constructor(value, suit) {
-        this.VALUE = value;
-        this.SUIT = suit;
+    constructor(value, suit, texture) {
+        this.value = value;
+        this.suit = suit;
+        this.model = new THREE.Mesh(
+            new THREE.BoxGeometry(this.DIMENSIONS.x, this.DIMENSIONS.y, this.DIMENSIONS.z),
+            new THREE.MeshStandardMaterial({
+                color: 0xFFFFFF,
+            })
+        );
     }
 
     /**
@@ -25,14 +34,22 @@ export class Card {
      * @returns number
      */
     getValue() {
-        return this.VALUE;
+        return this.value;
     }
 
     /**
      * Returns the cards suit
-     * @returns 
+     * @returns number
      */
     getSuit() {
-        return this.SUIT;
+        return this.suit;
+    }
+
+    /**
+     * Returns the cards model
+     * @return mesh
+     */
+    getModel() {
+        return this.model;
     }
 }

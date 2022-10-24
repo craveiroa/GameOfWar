@@ -14,7 +14,7 @@ export class StandardDeck extends Deck {
         for(let s = Constants.SPADES; s <= Constants.CLUBS; s++)
         {
             for(let v = 1; v < 14; v++ )
-                this.cards.push( new Card(v , s) )
+                this.addTop( new Card(v , s, undefined) );
         }
 
     }
