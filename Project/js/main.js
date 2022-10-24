@@ -87,8 +87,8 @@ function initGraphics() {
 
   camera = new THREE.PerspectiveCamera(90, gameCanvas.clientWidth/gameCanvas.clientHeight, 0.1, 1000);
   camera.name = 'camera';
-  camera.position.z = 0.2;
-  camera.position.y = 0.2;
+  camera.position.z = 0.3;
+  camera.position.y = 0.3;
   camera.lookAt(new THREE.Vector3(0,0,0));
 
   scene.add(camera);
@@ -107,7 +107,8 @@ function initGraphics() {
   scene.add(deck.model);
   deck.model.position.x = -0.4;
 
-  deck.takeTop();
+  let card = deck.takeTop();
+  scene.add(card.model);
   //Renderer
 
   renderer = new THREE.WebGLRenderer({

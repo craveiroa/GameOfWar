@@ -16,6 +16,7 @@ export class Deck {
      */
     constructor() {
         this.model = new THREE.Group();
+        this.model.rotation.x = Math.PI/2;
         this.cards = [];
     }
 

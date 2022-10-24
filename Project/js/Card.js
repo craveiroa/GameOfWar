@@ -25,6 +25,7 @@ export class Card {
             new THREE.BoxGeometry(this.DIMENSIONS.x, this.DIMENSIONS.y, this.DIMENSIONS.z),
             new THREE.MeshStandardMaterial({
                 color: 0xFFFFFF,
+                //
             })
         );
     }
