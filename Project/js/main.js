@@ -4,8 +4,6 @@ import * as TWEEN from '@tweenjs/tween.js'
 
 import { Deck } from './deck';
 import { StandardDeck } from './standardDeck';
-import { Mesh } from 'three';
-import { Card } from './card';
 
 //Graphics World
 let scene, camera, renderer;
