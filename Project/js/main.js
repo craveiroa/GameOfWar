@@ -2,8 +2,8 @@ import '../style.css';
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js'
 
-import {Deck} from './deck';
-import {StandardDeck} from './standardDeck';
+import { Deck } from './deck';
+import { StandardDeck } from './standardDeck';
 import { Mesh } from 'three';
 import { Card } from './card';
 
@@ -51,12 +51,11 @@ function createDeckModel(deck) {
   let deckModel = new THREE.Group();
   deck.userData = deck;
 
-  if(deck.isEmpty())
+  if (deck.isEmpty())
     return deckModel;
 
   let offset = 0;
-  for(let i = 0; i < deck.getSize(); i++)
-  {
+  for (let i = 0; i < deck.getSize(); i++) {
 
     let card = deck.lookAt(i);
     let cardModel = createCardModel(card, undefined);
@@ -85,11 +84,11 @@ function initGraphics() {
 
   //Camera
 
-  camera = new THREE.PerspectiveCamera(90, gameCanvas.clientWidth/gameCanvas.clientHeight, 0.1, 1000);
+  camera = new THREE.PerspectiveCamera(90, gameCanvas.clientWidth / gameCanvas.clientHeight, 0.1, 1000);
   camera.name = 'camera';
-  camera.position.z = 0.2;
+  camera.position.z = 0.3;
   camera.position.y = 0.2;
-  camera.lookAt(new THREE.Vector3(0,0,0));
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
 
   scene.add(camera);
 
@@ -148,7 +147,7 @@ function startTurn() {
  * Ends the game, typically when a player wins
  */
 function endGame() {
- 
+
 } //end of endGame
 
 /**
@@ -175,7 +174,7 @@ function loop(t) {
 
   TWEEN.update(t);
   render();
-  
+
   window.requestAnimationFrame(loop);
 
 } //end of loop

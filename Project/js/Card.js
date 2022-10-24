@@ -18,14 +18,15 @@ export class Card {
      * @param {number} value the cards numerical value, see Constants for Value Constants 
      * @param {number} suit the cards suit, see Deck for Constants Suit Constants
      */
-    constructor(value, suit, texture) {
+    constructor(value, suit, material) {
         this.value = value;
         this.suit = suit;
         this.model = new THREE.Mesh(
             new THREE.BoxGeometry(this.DIMENSIONS.x, this.DIMENSIONS.y, this.DIMENSIONS.z),
-            new THREE.MeshStandardMaterial({
+            material
+            /*new THREE.MeshStandardMaterial({
                 color: 0xFFFFFF,
-            })
+            })*/
         );
     }
 

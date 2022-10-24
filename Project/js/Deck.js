@@ -9,7 +9,7 @@ import * as THREE from 'three';
 export class Deck {
 
     model;
-    cards; 
+    cards;
 
     /**
      * Generates an empty Deck
@@ -96,9 +96,9 @@ export class Deck {
      */
     addTop(card) {
         this.cards.push(card);
-        
+
         let cardModel = card.model;
-        cardModel.position.set(0,0, card.DIMENSIONS.z * this.cards.length);
+        cardModel.position.set(card.DIMENSIONS.x * this.cards.length, 0, 0);
         this.model.add(cardModel);
     }
 
@@ -109,9 +109,9 @@ export class Deck {
     addBottom(card) {
         this.cards.unshift(card);
 
-        for (let i = 0; i < this.getSize(); i++ )
-            cards[i].model.position.set(0,0, card.DIMENSIONS.z * i);
- 
+        for (let i = 0; i < this.getSize(); i++)
+            cards[i].model.position.set(0, 0, card.DIMENSIONS.z * i);
+
         this.model.add(cardModel);
     }
 
@@ -139,12 +139,11 @@ export class Deck {
      * Shuffles the deck
      */
     shuffle() {
-        for (let i = 0; i < this.cards.length; i++)
-        {
+        for (let i = 0; i < this.cards.length; i++) {
             let r = i + Math.floor(Math.random() * (this.cards.length - i));
 
             this.swap(i, r);
         }
     }
-    
+
 }
