@@ -148,7 +148,7 @@ function reset() {
  * Starts the game if it hasnt been started already
  * @return {boolean} true if game starts, false otherwise
  */
-function startGame() {
+async function startGame() {
   if (gameStart)
     return false;
 
@@ -159,7 +159,30 @@ function startGame() {
   let i = 0;
   while (!startDeck.isEmpty()) {
     let card = startDeck.takeTop();
-    playerDecks[i].addBottom(card);
+    let beginX = startDeck.model.position.x;
+    let beginY = startDeck.model.position.y;
+    let beginZ = startDeck.model.position.z;
+    let endX = playerDecks[i].model.position.x;
+    let endY = playerDecks[i].model.position.y;
+    let endZ = playerDecks[i].model.position.z;
+
+    const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ })
+      .to({ x: endX, y: endY, z: endZ }, 1000)
+      .onUpdate((coords) => {
+        card.model.position.x = coords.x;
+        card.model.position.y = coords.y;
+        card.model.position.z = coords.z;
+      })
+      .onComplete((object) => {
+        object.model.rotation.set
+      });
+    tw.start();
+    await delay(100);
+
+    //playerDecks[i].addBottom(card);
+    card.model.rotation.set(Math.PI / 2, 0, 0)
+    scene.add(card.model);
+
     i = (i + 1) % numPlayers;
   }
 
@@ -222,3 +245,7 @@ function render() {
 } //end of render
 
 main();
+
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
