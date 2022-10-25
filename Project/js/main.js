@@ -2,8 +2,9 @@ import '../style.css';
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js'
 
-import {Deck} from './deck';
-import {StandardDeck} from './standardDeck';
+import {Card} from './Card';
+import {Deck} from './Deck';
+import {StandardDeck} from './StandardDeck';
 
 //Graphics World
 let scene, camera, renderer;
@@ -14,8 +15,9 @@ let cardGeometry, cardMaterial;
 let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
-let numPlayers = 2;
-let start = false;
+let numPlayers = 3;
+let gameStart = false; 
+let inTurn = false; 
 
 
 const CARD_THICKNESS = 0.00024;
@@ -40,37 +42,6 @@ function loadAssets() {
 
 } //end of loadAssets
 
-
-/**
- * creates a deck, and generates cards if it contains them
- * @param {Deck} deck deck to be projected into the world
- */
-function createDeckModel(deck) {
-  let deckModel = new THREE.Group();
-  deck.userData = deck;
-
-  if(deck.isEmpty())
-    return deckModel;
-
-  let offset = 0;
-  for(let i = 0; i < deck.getSize(); i++)
-  {
-
-    let card = deck.lookAt(i);
-    let cardModel = createCardModel(card, undefined);
-
-    cardModel.position.z = offset;
-
-    deckModel.add(cardModel);
-
-    offset += CARD_THICKNESS;
-
-  } //end of for
-
-  return deckModel;
-
-} //end of createdeckModel 
-
 /**
  * builds the view the user will see
  */
@@ -85,8 +56,8 @@ function initGraphics() {
 
   camera = new THREE.PerspectiveCamera(90, gameCanvas.clientWidth/gameCanvas.clientHeight, 0.1, 1000);
   camera.name = 'camera';
-  camera.position.z = 0.2;
-  camera.position.y = 0.2;
+  camera.position.z = 0.5;
+  camera.position.y = 0.5;
   camera.lookAt(new THREE.Vector3(0,0,0));
 
   scene.add(camera);
@@ -101,11 +72,37 @@ function initGraphics() {
 
   scene.add(pointLight);
 
-  let deck = new StandardDeck();
-  scene.add(deck.model);
-  deck.model.position.x = -0.4;
+  // Game models
 
-  deck.takeTop();
+  //Table
+
+  //Decks
+
+  startDeck = new StandardDeck();
+  scene.add(startDeck.model);
+
+  let spacing = ( Math.PI * 2 ) / numPlayers;
+  let outerRadius = 0.5;
+  let innerRadius = 0.25;
+
+  for(let i = 0; i < numPlayers; i++)
+  {
+    let hand = new Deck();
+    playerDecks.push(hand);
+
+    let value = spacing * i;
+    hand.model.position.set(Math.cos(value) * outerRadius, 0, Math.sin(value) * outerRadius);
+
+    let tabled = new Deck(); //cards that are on table
+    tableDecks.push(tabled);
+
+    tabled.model.position.set(Math.cos(value) * innerRadius, 0, Math.sin(value) * innerRadius);
+
+    scene.add(hand.model);
+    scene.add(tabled.model);
+
+  }//end of for
+
   //Renderer
 
   renderer = new THREE.WebGLRenderer({
@@ -124,13 +121,39 @@ function initGraphics() {
  * reset the game
  */
 function reset() {
+  scene.remove(startDeck.model);
+  startDeck = new StandardDeck();
+  scene.add(startDeck.model);
+
+  for(let i = 0; i < numPlayers; i++)
+  {
+    playerDecks[i].clear();
+    tableDecks[i].clear();
+  }
+
+  gameStart = false;
 
 } //end of reset
 
 /**
  * Starts the game if it hasnt been started already
+ * @return {boolean} true if game starts, false otherwise
  */
 function startGame() {
+  if(gameStart)
+    return false;
+
+  gameStart = true;
+
+  startDeck.shuffle();
+
+  let i = 0;
+  while(!startDeck.isEmpty())
+  {
+    let card = startDeck.takeTop();
+    playerDecks[i].addBottom(card);
+    i = (i + 1) % numPlayers;
+  }
 
 } //end of startGame
 
@@ -158,9 +181,11 @@ function initController() {
     switch (e.key) {
       case 'n':
       case 'N':
+        startGame();
         break;
       case 'r':
       case 'R':
+        reset();
         break;
     }
   }

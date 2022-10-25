@@ -16,6 +16,7 @@ export class Deck {
      */
     constructor() {
         this.model = new THREE.Group();
+        this.model.rotateX(Math.PI/2);
         this.cards = [];
     }
 
@@ -109,10 +110,13 @@ export class Deck {
     addBottom(card) {
         this.cards.unshift(card);
 
-        for (let i = 0; i < this.getSize(); i++ )
+        if(!this.isEmpty)
+        {
+            for (let i = 0; i < this.getSize(); i++ )
             cards[i].model.position.set(0,0, card.DIMENSIONS.z * i);
- 
-        this.model.add(cardModel);
+        }
+
+        this.model.add(card.model);
     }
 
     /**
@@ -147,4 +151,14 @@ export class Deck {
         }
     }
     
+    /**
+     * Empties the deck
+     */
+    clear() {
+        while(!this.isEmpty())
+        {
+            let card = this.cards.pop()
+            this.model.remove(card.model);
+        }
+    }
 }
