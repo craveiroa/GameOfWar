@@ -18,12 +18,12 @@ export class Card {
      * @param {number} value the cards numerical value, see Constants for Value Constants 
      * @param {number} suit the cards suit, see Deck for Constants Suit Constants
      */
-    constructor(value, suit, material) {
+    constructor(value, suit, materials) {
         this.value = value;
         this.suit = suit;
         this.model = new THREE.Mesh(
             new THREE.BoxGeometry(this.DIMENSIONS.x, this.DIMENSIONS.y, this.DIMENSIONS.z),
-            material
+            materials
         );
     }
 
