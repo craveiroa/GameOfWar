@@ -19,19 +19,11 @@ export class StandardDeck extends Deck {
 
         for (let s = Constants.SPADES; s <= Constants.CLUBS; s++) {
             for (let v = 0; v < 13; v++) {
-                const materials = [
-                    undefined,
-                    undefined,
-                    undefined,
-                    undefined,
-                    new THREE.MeshBasicMaterial({
-                        map: textureLoader.load(cardStr),
-                    }),
-                    new THREE.MeshBasicMaterial({
-                        map: textureLoader.load('assets/card_back.jpg'),
-                    }),
-                ];
-                this.addTop(new Card(v, s, materials));
+
+                var material = new THREE.MeshBasicMaterial({
+                    map: textureLoader.load(cardStr),
+                });
+                this.addTop(new Card(v, s, material));
                 cardTxtr++;
                 cardStr = 'assets/' + cardTxtr + '.jpg';
             }

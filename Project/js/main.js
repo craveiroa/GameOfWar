@@ -4,7 +4,7 @@ import * as TWEEN from '@tweenjs/tween.js'
 
 import { Deck } from './Deck';
 import { StandardDeck } from './StandardDeck';
-import { Card } from './card';
+import { Card } from './Card';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 
 
@@ -159,7 +159,7 @@ function startGame() {
   let i = 0;
   while (!startDeck.isEmpty()) {
     let card = startDeck.takeTop();
-    playerDecks[i].addBottom(card);
+    playerDecks[i].addTop(card);
     i = (i + 1) % numPlayers;
   }
 
