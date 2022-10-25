@@ -2,13 +2,17 @@ import '../style.css';
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js'
 
-import { Deck } from './deck';
-import { StandardDeck } from './standardDeck';
+import { Deck } from './Deck';
+import { StandardDeck } from './StandardDeck';
+import { Card } from './card';
+import { FlyControls } from 'three/addons/controls/FlyControls.js';
+
 
 //Graphics World
 let scene, camera, renderer;
 let gameCanvas = document.getElementById('gameOfWar');
 let cardGeometry, cardMaterial;
+let flycontrols;
 
 //Logic Stuff
 let startDeck;
@@ -105,6 +109,15 @@ function initGraphics() {
   deck.model.position.x = -0.4;
 
   deck.takeTop();
+
+  // Fly controls
+
+  flycontrols = new FlyControls(camera, document.body);
+
+  flycontrols.autoForward = false;
+  flycontrols.movementSpeed = 0.05;
+
+
   //Renderer
 
   renderer = new THREE.WebGLRenderer({
@@ -172,6 +185,8 @@ function loop(t) {
 
   TWEEN.update(t);
   render();
+
+  flycontrols.update(0.1);
 
   window.requestAnimationFrame(loop);
 

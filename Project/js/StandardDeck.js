@@ -1,5 +1,5 @@
 import { Deck } from "./deck";
-import { Card } from "./card";
+import { Card } from "./Card";
 import * as Constants from './constants'
 import * as THREE from 'three';
 
@@ -12,25 +12,23 @@ export class StandardDeck extends Deck {
     constructor() {
         super();
 
-        const textures = {};
-
-        var cardTxtr = 12;
-
-        var cardStr = 'assets/' + cardTxtr + '.jpg'
-
         // load the card textures
         var textureLoader = new THREE.TextureLoader();
+        var cardTxtr = 1;
+        var cardStr = 'assets/' + cardTxtr + '.jpg';
 
         for (let s = Constants.SPADES; s <= Constants.CLUBS; s++) {
-            for (let v = 1; v < 14; v++) {
+            for (let v = 0; v < 13; v++) {
+                console.log(cardTxtr)
+
                 var material = new THREE.MeshBasicMaterial({
                     map: textureLoader.load(cardStr),
                 });
                 this.addTop(new Card(v, s, material));
-                cardTxtr += 1;
+                cardTxtr++;
+                cardStr = 'assets/' + cardTxtr + '.jpg';
             }
         }
-
     }
 
 }
