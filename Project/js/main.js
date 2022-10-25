@@ -105,8 +105,6 @@ function initGraphics() {
 
   }//end of for
 
-  deck.takeTop();
-
   // Fly controls
 
   flycontrols = new FlyControls(camera, document.body);
