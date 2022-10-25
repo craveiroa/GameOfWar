@@ -99,7 +99,7 @@ export class Deck {
         this.cards.push(card);
 
         let cardModel = card.model;
-        cardModel.position.set(0, 0, card.DIMENSIONS.z * this.cards.length);
+        //cardModel.position.set(0, 0, card.DIMENSIONS.z * this.cards.length);
         this.model.add(cardModel);
     }
 

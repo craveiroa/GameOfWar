@@ -168,6 +168,7 @@ async function startGame() {
 
     const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card})
       .to({ x: endX, y: endY, z: endZ }, 1000)
+      .easing(TWEEN.Easing.Exponential.Out)
       .onUpdate((tween) => {
         tween.card.model.position.x = tween.x;
         tween.card.model.position.y = tween.y;
