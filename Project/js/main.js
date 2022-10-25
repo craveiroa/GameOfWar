@@ -5,20 +5,20 @@ import * as TWEEN from '@tweenjs/tween.js'
 import { Deck } from './Deck';
 import { StandardDeck } from './StandardDeck';
 import { Card } from './Card';
-import { FlyControls } from 'three/addons/controls/FlyControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 
 //Graphics World
 let scene, camera, renderer;
 let gameCanvas = document.getElementById('gameOfWar');
 let cardGeometry, cardMaterial;
-let flycontrols;
+let orbitControls;
 
 //Logic Stuff
 let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
-let numPlayers = 3;
+let numPlayers = 2;
 let gameStart = false;
 let inTurn = false;
 
@@ -105,13 +105,9 @@ function initGraphics() {
 
   }//end of for
 
-  // Fly controls
+  // Orbit controls
 
-  flycontrols = new FlyControls(camera, document.body);
-
-  flycontrols.autoForward = false;
-  flycontrols.movementSpeed = 0.05;
-
+  orbitControls = new OrbitControls(camera, document.body);
 
   //Renderer
 
@@ -159,7 +155,10 @@ async function startGame() {
   let i = 0;
   while (!startDeck.isEmpty()) {
     let card = startDeck.takeTop();
-    
+
+    card.model.rotation.set(Math.PI / 2, 0, 0)
+    scene.add(card.model);
+
     let beginX = startDeck.model.position.x;
     let beginY = startDeck.model.position.y;
     let beginZ = startDeck.model.position.z;
@@ -167,24 +166,23 @@ async function startGame() {
     let endY = playerDecks[i].model.position.y;
     let endZ = playerDecks[i].model.position.z;
 
-    const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ })
+    const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card})
       .to({ x: endX, y: endY, z: endZ }, 1000)
-      .onUpdate((coords) => {
-        card.model.position.x = coords.x;
-        card.model.position.y = coords.y;
-        card.model.position.z = coords.z;
+      .onUpdate((tween) => {
+        tween.card.model.position.x = tween.x;
+        tween.card.model.position.y = tween.y;
+        tween.card.model.position.z = tween.z;
       })
-      .onComplete((object) => {
-        object.model.rotation.set
+      .onComplete((tween) => {
+        tween.card.model.rotation.set(0, 0, 0);
+        tween.card.model.position.set(0, 0, card.DIMENSIONS.z * playerDecks[tween.i].getSize());
+        playerDecks[tween.i].addTop(tween.card);
+
       });
     tw.start();
-    await delay(100);
-
-    //playerDecks[i].addBottom(card);
-    card.model.rotation.set(Math.PI / 2, 0, 0)
-    scene.add(card.model);
 
     i = (i + 1) % numPlayers;
+    await delay(100);
   }
 
 } //end of startGame
@@ -231,7 +229,7 @@ function loop(t) {
   TWEEN.update(t);
   render();
 
-  flycontrols.update(0.1);
+  orbitControls.update();
 
   window.requestAnimationFrame(loop);
 
