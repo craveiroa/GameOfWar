@@ -1,4 +1,4 @@
-import { Card } from "./card";
+import { Card } from "./Card";
 import * as THREE from 'three';
 
 /**
@@ -99,7 +99,7 @@ export class Deck {
         this.cards.push(card);
 
         let cardModel = card.model;
-        cardModel.position.set(0, 0, card.DIMENSIONS.z * this.cards.length);
+        //cardModel.position.set(0, 0, card.DIMENSIONS.z * this.cards.length);
         this.model.add(cardModel);
     }
 
@@ -108,6 +108,7 @@ export class Deck {
      * @param {Card} card 
      */
     addBottom(card) {
+
         this.cards.unshift(card);
 
         if (!this.isEmpty) {
@@ -134,6 +135,20 @@ export class Deck {
      */
     swap(p1, p2) {
         let temp = this.cards[p1];
+        let tempPosition = this.cards[p1].model.position.clone();
+
+        this.cards[p1].model.position.set(
+            this.cards[p2].model.position.x,
+            this.cards[p2].model.position.y,
+            this.cards[p2].model.position.z,
+        );
+
+        this.cards[p2].model.position.set(
+            tempPosition.x,
+            tempPosition.y,
+            tempPosition.z,
+        );
+
         this.cards[p1] = this.cards[p2];
         this.cards[p2] = temp;
     }
@@ -142,11 +157,15 @@ export class Deck {
      * Shuffles the deck
      */
     shuffle() {
+
+        let tweens = []; //pool of tweens
+
         for (let i = 0; i < this.cards.length; i++) {
             let r = i + Math.floor(Math.random() * (this.cards.length - i));
 
             this.swap(i, r);
         }
+
     }
 
     /**
