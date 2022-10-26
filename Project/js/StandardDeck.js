@@ -22,7 +22,6 @@ export class StandardDeck extends Deck {
                 var material = new THREE.MeshBasicMaterial({
                     map: textureLoader.load(cardStr),
                 });
-                this.addTop(new Card(v, s, material));
                 const materials = [
                     undefined,
                     undefined,
