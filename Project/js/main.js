@@ -118,7 +118,6 @@ function initGraphics() {
   renderer.setSize(gameCanvas.clientWidth, gameCanvas.clientHeight);
 
   console.log(scene);
-
 } //end of initGraphics
 
 //Here We make our game :) 
@@ -184,13 +183,84 @@ async function startGame() {
     i = (i + 1) % numPlayers;
     await delay(100);
   }
+  await delay(1100);
+
+  startTurn();
+
 
 } //end of startGame
 
 /**
  * starts the next turn sequence
  */
-function startTurn() {
+async function startTurn() {
+
+  // Does only one deck have cards?
+  var playerDict = {};
+  for (let i = 0; i < playerDecks.length; i++) {
+    if (!playerDecks[i].isEmpty()) {
+      playerDict[i] = playerDecks[i].getSize();
+    }
+  }
+
+  // Check if there is only one deck with cards remaining.
+  if (Object.keys(playerDict).length == 1) {
+    // If there is only one deck with cards, declare a winner.
+    endGame(Number(Object.keys(playerDict)[0]) + 1);
+  }
+
+  // If there is more than one deck with cards remaining then 
+  // play out a turn with those decks
+  for (let i = 0; i < playerDecks.length; i++) {
+    // Place top card on table
+    if (!playerDecks[i].isEmpty()) {
+      let card = playerDecks[i].takeTop();
+
+      card.model.rotation.set(Math.PI / 2, 0, 0)
+      scene.add(card.model);
+
+      let beginX = playerDecks[i].model.position.x;
+      let beginY = playerDecks[i].model.position.y;
+      let beginZ = playerDecks[i].model.position.z;
+      let endX = tableDecks[i].model.position.x;
+      let endY = tableDecks[i].model.position.y;
+      let endZ = tableDecks[i].model.position.z;
+
+
+      const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card })
+        .to({ x: endX, y: endY, z: endZ }, 1000)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onUpdate((tween) => {
+          tween.card.model.position.x = tween.x;
+          tween.card.model.position.y = tween.y;
+          tween.card.model.position.z = tween.z;
+        })
+        .onComplete((tween) => {
+          tween.card.model.rotation.set(0, 0, 0);
+          tween.card.model.position.set(0, 0, card.DIMENSIONS.z * tableDecks[tween.i].getSize());
+          tableDecks[tween.i].addTop(tween.card);
+        });
+      tw.start();
+
+      await delay(100);
+    }
+  }
+
+  await delay(1000);
+
+  // Flip each card face up
+  for (let i = 0; i < tableDecks.length; i++) {
+    if (!tableDecks[i].isEmpty()) {
+      tableDecks[i].flipTopUp();
+    }
+  }
+
+  // Is one greater than the others?
+  for (let i = 0; i < tableDecks.length; i++) {
+    if (!tableDecks[i].isEmpty()) {
+      // continue working from here
+    }
+  }
 
 } //end of startTurn
 
@@ -198,8 +268,8 @@ function startTurn() {
 /**
  * Ends the game, typically when a player wins
  */
-function endGame() {
-
+function endGame(winner) {
+  console.log('I am player', winner, 'and I am better than everyone else');
 } //end of endGame
 
 /**

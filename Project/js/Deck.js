@@ -177,4 +177,24 @@ export class Deck {
             this.model.remove(card.model);
         }
     }
+
+    /**
+     * Flips a given card face up
+     */
+    flipTopUp() {
+        if (!this.isEmpty())
+            this.peekTop().model.rotation.set(Math.PI, 0, 0)
+        else
+            console.error('Deck is empty, nothing to flip')
+    }
+
+    /**
+     * Flips a given card face down
+     */
+    flipTopDown() {
+        if (!this.isEmpty())
+            this.peekTop().model.rotation.set(0, 0, 0)
+        else
+            console.error('Deck is empty, nothing to flip')
+    }
 }
