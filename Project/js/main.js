@@ -18,7 +18,7 @@ let orbitControls;
 let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
-let numPlayers = 2;
+let numPlayers = 3;
 let gameStart = false;
 let inTurn = false;
 
@@ -178,7 +178,6 @@ async function startGame() {
         tween.card.model.rotation.set(0, 0, 0);
         tween.card.model.position.set(0, 0, card.DIMENSIONS.z * playerDecks[tween.i].getSize());
         playerDecks[tween.i].addTop(tween.card);
-
       });
     tw.start();
 
