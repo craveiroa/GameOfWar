@@ -165,7 +165,6 @@ async function startGame() {
     let endX = playerDecks[i].model.position.x;
     let endY = playerDecks[i].model.position.y;
     let endZ = playerDecks[i].model.position.z;
-
     const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ })
       .to({ x: endX, y: endY, z: endZ }, 1000)
       .onUpdate((coords) => {
@@ -173,13 +172,10 @@ async function startGame() {
         card.model.position.y = coords.y;
         card.model.position.z = coords.z;
       })
-      .onComplete((object) => {
-        object.model.rotation.set
-      });
     tw.start();
     await delay(100);
 
-    //playerDecks[i].addBottom(card);
+    playerDecks[i].addBottom(card);
     card.model.rotation.set(Math.PI / 2, 0, 0)
     scene.add(card.model);
 
