@@ -11,7 +11,7 @@ export class Card {
     value;
     suit;
     model;
-    DIMENSIONS = new THREE.Vector3(0.0571, 0.0829, 0.00024);
+    DIMENSIONS = new THREE.Vector3(0.0571, 0.0829, 0.00048);
 
     /**
      * Constructs a new Card Object
@@ -49,5 +49,19 @@ export class Card {
      */
     getModel() {
         return this.model;
+    }
+
+    /**
+     * Compares two cards values
+     * @param {Card} otherCard 
+     * @returns 1 if greater, -1 if less, 0 if equal
+     */
+    compareValue(otherCard) {
+        if(this.value > otherCard.value())
+            return 1;
+        else if (this.value < otherCard.getValue())
+            return 1;
+        else
+            return 0;
     }
 }
