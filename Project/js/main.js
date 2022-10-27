@@ -80,7 +80,7 @@ function initGraphics() {
   pointZ = 0;
   pointLight = new THREE.PointLight(0xFFFFFF, 1);
   pointLight.position.set(0, 2, 0);
-  //pointLight.castShadow = true;
+  pointLight.castShadow = true;
   scene.add(pointLight);
 
   // Game models
@@ -95,6 +95,7 @@ function initGraphics() {
   });
   const table = new THREE.Mesh(tableGeometry, tableMaterial);
   table.position.setY(-0.025);
+  table.receiveShadow = true;
   scene.add(table)
 
   //Decks
@@ -136,6 +137,7 @@ function initGraphics() {
   });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(gameCanvas.clientWidth, gameCanvas.clientHeight);
+  renderer.shadowMap.enabled = true;
 
   console.log(scene);
 } //end of initGraphics
@@ -433,6 +435,11 @@ function initController() {
       case 'p':
       case 'P':
         togglePoint();
+        break;
+      case 'm':
+      case 'M':
+        toggleShadows();
+        break;
     }
   }
 } //end of initController
@@ -504,4 +511,13 @@ function togglePoint() {
   else {
     pointLight.intensity = 0;
   }
+}
+
+function toggleShadows() {
+  renderer.shadowMap.enabled = !renderer.shadowMap.enabled;
+  scene.traverse(function (child) {
+    if (child.material) {
+      child.material.needsUpdate = true
+    }
+  })
 }

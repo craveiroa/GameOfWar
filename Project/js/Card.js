@@ -25,6 +25,8 @@ export class Card {
             new THREE.BoxGeometry(this.DIMENSIONS.x, this.DIMENSIONS.y, this.DIMENSIONS.z),
             materials
         );
+        this.model.receiveShadow = true;
+        this.model.castShadow = true;
     }
 
     /**
@@ -57,7 +59,7 @@ export class Card {
      * @returns 1 if greater, -1 if less, 0 if equal
      */
     compareValue(otherCard) {
-        if(this.value > otherCard.value())
+        if (this.value > otherCard.value())
             return 1;
         else if (this.value < otherCard.getValue())
             return 1;
