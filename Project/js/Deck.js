@@ -112,9 +112,10 @@ export class Deck {
 
         this.cards.unshift(card);
 
-        let cardModel = card.model;
-        cardModel.position.set(0, 0, -card.DIMENSIONS.z * this.cards.length);
-        this.model.add(cardModel);
+        for (let i = 0; i < this.getSize(); i++)
+            this.cards[i].model.position.set(0, 0, -card.DIMENSIONS.z * i);
+
+        this.model.add(card.model);
     }
 
     /**
