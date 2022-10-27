@@ -15,6 +15,9 @@ let scene, camera, renderer;
 let gameCanvas = document.getElementById('gameOfWar');
 let cardGeometry, cardMaterial;
 let orbitControls;
+let pointX;
+let pointZ;
+let pointLight;
 
 //Logic Stuff
 let startDeck;
@@ -67,17 +70,31 @@ function initGraphics() {
 
   //Lighting
 
-  let ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.1);
+  let ambientLight = new THREE.AmbientLight(0x0000FF, 0.1);
   scene.add(ambientLight);
 
-  let pointLight = new THREE.PointLight(0xFFFFFF);
-  pointLight.position.y = 5.0;
-
+  pointX = 0;
+  pointZ = 0;
+  pointLight = new THREE.PointLight(0xFFFFFF);
+  pointLight.position.set(0, 2, 0);
+  //pointLight.castShadow = true;
   scene.add(pointLight);
+  const helper = new THREE.PointLightHelper(pointLight);
+  scene.add(helper);
 
   // Game models
 
   //Table
+
+  var textureLoader = new THREE.TextureLoader();
+
+  const tableGeometry = new THREE.CylinderGeometry(0.7, 0.7, 0.05, 32);
+  const tableMaterial = new THREE.MeshStandardMaterial({
+    map: textureLoader.load('assets/wood.jpeg'),
+  });
+  const table = new THREE.Mesh(tableGeometry, tableMaterial);
+  table.position.setY(-0.025);
+  scene.add(table)
 
   //Decks
 
@@ -288,34 +305,45 @@ async function startTurn() {
     }
   });
 
+  await delay(1000)
+
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopDown();
   });
 
+  await delay(1000)
+
+
   console.log(isWar);
 
   while (isWar) {
-  
+
     greatestValue = -1;
     winningPlr = -1;
     isWar = false;
 
-    for(let i = 0; i < playersInPlay.length; i++)
-    {
+    for (let i = 0; i < playersInPlay.length; i++) {
       let plr = playersInPlay[i];
 
-      for(let j = 0; j < 2; j++)
-      {
-        if (!playerDecks[plr].isEmpty())
-          tableDecks[plr].addTop(playerDecks[plr].takeTop());
-      }
+      for (let j = 0; j < 2; j++) {
+        if (!playerDecks[plr].isEmpty()) {
+          let card = playerDecks[plr].takeTop();
+          scene.add(card.model);
+          tableDecks[plr].addTop(card);
+          await delay(500)
 
-      await delay(1000);
+        }
+      }
     }
+
+    await delay(3000)
 
     playersInPlay.forEach((plr) => {
       tableDecks[plr].flipTopUp();
     });
+
+    await delay(3000)
+
 
     playersInPlay.forEach((plr) => {
 
@@ -336,6 +364,9 @@ async function startTurn() {
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopDown();
   });
+
+  await delay(1000)
+
 
   //move all cards on table to winners deck
   let winnerDeck = playerDecks[winningPlr];
@@ -378,6 +409,22 @@ function initController() {
       case 'R':
         reset();
         break;
+      case 'w':
+      case 'W':
+        movePointLight('W');
+        break;
+      case 'a':
+      case 'A':
+        movePointLight('A');
+        break;
+      case 's':
+      case 'S':
+        movePointLight('S');
+        break;
+      case 'd':
+      case 'D':
+        movePointLight('D');
+        break;
     }
   }
 } //end of initController
@@ -408,4 +455,23 @@ main();
 
 function delay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function movePointLight(key) {
+  if (key == 'W') {
+    pointZ -= 0.25;
+    pointLight.position.set(pointX, 2, pointZ);
+  }
+  else if (key == 'A') {
+    pointX -= 0.25;
+    pointLight.position.set(pointX, 2, pointZ);
+  }
+  else if (key == 'S') {
+    pointZ += 0.25;
+    pointLight.position.set(pointX, 2, pointZ);
+  }
+  else {
+    pointX += 0.25;
+    pointLight.position.set(pointX, 2, pointZ);
+  }
 }
