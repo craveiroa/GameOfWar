@@ -20,6 +20,7 @@ let pointZ;
 let pointLight;
 let ambientLight;
 let ambientOn = true;
+let pointOn = true;
 
 //Logic Stuff
 let startDeck;
@@ -77,7 +78,7 @@ function initGraphics() {
 
   pointX = 0;
   pointZ = 0;
-  pointLight = new THREE.PointLight(0xFFFFFF);
+  pointLight = new THREE.PointLight(0xFFFFFF, 1);
   pointLight.position.set(0, 2, 0);
   //pointLight.castShadow = true;
   scene.add(pointLight);
@@ -429,6 +430,9 @@ function initController() {
       case 'L':
         toggleAmbient();
         break;
+      case 'p':
+      case 'P':
+        togglePoint();
     }
   }
 } //end of initController
@@ -488,5 +492,16 @@ function toggleAmbient() {
   }
   else {
     ambientLight.intensity = 0;
+  }
+}
+
+function togglePoint() {
+  pointOn = !pointOn;
+
+  if (pointOn) {
+    pointLight.intensity = 1;
+  }
+  else {
+    pointLight.intensity = 0;
   }
 }
