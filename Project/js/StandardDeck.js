@@ -20,13 +20,13 @@ export class StandardDeck extends Deck {
         for (let s = Constants.SPADES; s <= Constants.CLUBS; s++) {
             for (let v = 0; v < 13; v++) {
                 var material = new THREE.MeshBasicMaterial({
-                    map: textureLoader.load(cardStr),
+                    color: 0xFFFFFF
                 });
                 const materials = [
-                    undefined,
-                    undefined,
-                    undefined,
-                    undefined,
+                    material,
+                    material,
+                    material,
+                    material, 
                     new THREE.MeshBasicMaterial({
                         map: textureLoader.load(cardStr),
                     }),

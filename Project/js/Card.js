@@ -11,7 +11,7 @@ export class Card {
     value;
     suit;
     model;
-    DIMENSIONS = new THREE.Vector3(0.0571, 0.0829, 0.00048);
+    DIMENSIONS = new THREE.Vector3(0.0571, 0.0829, 0.00120);
 
     /**
      * Constructs a new Card Object

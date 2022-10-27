@@ -2,9 +2,11 @@ import '../style.css';
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js'
 
-import { Deck } from './Deck';
-import { StandardDeck } from './StandardDeck';
-import { Card } from './Card';
+import * as CONSTANTS from './constants.js';
+import { Card } from './Card.js';
+import { Deck } from './Deck.js';
+import { StandardDeck } from './StandardDeck.js';
+
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 
@@ -18,12 +20,10 @@ let orbitControls;
 let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
+let playersInPlay = [];
 let numPlayers = 3;
 let gameStart = false;
 let inTurn = false;
-
-
-const CARD_THICKNESS = 0.00024;
 
 /**
  * Startup Function
@@ -103,6 +103,8 @@ function initGraphics() {
     scene.add(hand.model);
     scene.add(tabled.model);
 
+    playersInPlay.push(i);
+
   }//end of for
 
   // Orbit controls
@@ -130,9 +132,13 @@ function reset() {
   startDeck = new StandardDeck();
   scene.add(startDeck.model);
 
+  playersInPlay = []
+
   for (let i = 0; i < numPlayers; i++) {
     playerDecks[i].clear();
     tableDecks[i].clear();
+
+    playersInPlay.push(i);
   }
 
   gameStart = false;
@@ -151,19 +157,88 @@ async function startGame() {
 
   startDeck.shuffle();
 
+
   let i = 0;
   while (!startDeck.isEmpty()) {
     let card = startDeck.takeTop();
 
-    card.model.rotation.set(Math.PI / 2, 0, 0)
+    //card.model.rotation.set(Math.PI / 2, 0, 0)
+
+    scene.add(card.model);
+    /*
+        let beginX = card.model.position.x;
+        let beginY = card.model.position.y;
+        let beginZ = card.model.position.z;
+        let endX = playerDecks[i].model.position.x;
+        let endY = playerDecks[i].model.position.y + card.DIMENSIONS.z * (playerDecks[i].getSize() + 2);
+        let endZ = playerDecks[i].model.position.z;
+    
+        const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card })
+          .to({ x: endX, y: endY, z: endZ }, 1000)
+          .easing(TWEEN.Easing.Exponential.Out)
+          .onUpdate((tween) => {
+            tween.card.model.position.x = tween.x;
+            tween.card.model.position.y = tween.y;
+            tween.card.model.position.z = tween.z;
+          })
+          .onComplete((tween) => {
+            tween.card.model.rotation.set(0, 0, 0);
+            tween.card.model.position.set(0, 0, card.DIMENSIONS.z * playerDecks[tween.i].getSize());
+            
+          });
+        tw.start();
+    */
+
+    playerDecks[i].addTop(card);
+    i = (i + 1) % numPlayers;
+  }
+  await delay(1100);
+
+} //end of startGame
+
+/**
+ * starts the next turn sequence
+ */
+async function startTurn() {
+
+  if (inTurn)
+    return;
+
+  inTurn = true;
+
+  // Remove players from play with no cards
+
+  for (let i = 0; i < playersInPlay.length; i++) {
+    let plr = playersInPlay[i];
+
+    if (playerDecks[plr].isEmpty())
+      playersInPlay.splice(i, 1);
+  }
+
+  // Check if there is only one plr with cards remaining.
+  if (playersInPlay.length == 1) {
+    // If there is only one plr with cards, declare a winner.
+    endGame(playersInPlay[0] + 1);
+  }
+
+  // If there is more than one deck with cards remaining then 
+  // play out a turn with those decks
+  for (let i = 0; i < playersInPlay.length; i++) {
+
+    let plr = playersInPlay[i];
+
+    // Place top card on table
+    let card = playerDecks[plr].takeTop();
     scene.add(card.model);
 
-    let beginX = startDeck.model.position.x;
-    let beginY = startDeck.model.position.y;
-    let beginZ = startDeck.model.position.z;
-    let endX = playerDecks[i].model.position.x;
-    let endY = playerDecks[i].model.position.y;
-    let endZ = playerDecks[i].model.position.z;
+    /*
+    let beginX = playerDecks[i].model.position.x;
+    let beginY = playerDecks[i].model.position.y;
+    let beginZ = playerDecks[i].model.position.z;
+    let endX = tableDecks[i].model.position.x;
+    let endY = tableDecks[i].model.position.y;
+    let endZ = tableDecks[i].model.position.z;
+
 
     const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card })
       .to({ x: endX, y: endY, z: endZ }, 1000)
@@ -175,93 +250,108 @@ async function startGame() {
       })
       .onComplete((tween) => {
         tween.card.model.rotation.set(0, 0, 0);
-        tween.card.model.position.set(0, 0, card.DIMENSIONS.z * playerDecks[tween.i].getSize());
-        playerDecks[tween.i].addTop(tween.card);
+        tween.card.model.position.set(0, 0, card.DIMENSIONS.z * tableDecks[tween.i].getSize());
+        tableDecks[tween.i].addTop(tween.card);
       });
     tw.start();
 
-    i = (i + 1) % numPlayers;
     await delay(100);
-  }
-  await delay(1100);
+    */
 
-  startTurn();
-
-
-} //end of startGame
-
-/**
- * starts the next turn sequence
- */
-async function startTurn() {
-
-  // Does only one deck have cards?
-  var playerDict = {};
-  for (let i = 0; i < playerDecks.length; i++) {
-    if (!playerDecks[i].isEmpty()) {
-      playerDict[i] = playerDecks[i].getSize();
-    }
-  }
-
-  // Check if there is only one deck with cards remaining.
-  if (Object.keys(playerDict).length == 1) {
-    // If there is only one deck with cards, declare a winner.
-    endGame(Number(Object.keys(playerDict)[0]) + 1);
-  }
-
-  // If there is more than one deck with cards remaining then 
-  // play out a turn with those decks
-  for (let i = 0; i < playerDecks.length; i++) {
-    // Place top card on table
-    if (!playerDecks[i].isEmpty()) {
-      let card = playerDecks[i].takeTop();
-
-      card.model.rotation.set(Math.PI / 2, 0, 0)
-      scene.add(card.model);
-
-      let beginX = playerDecks[i].model.position.x;
-      let beginY = playerDecks[i].model.position.y;
-      let beginZ = playerDecks[i].model.position.z;
-      let endX = tableDecks[i].model.position.x;
-      let endY = tableDecks[i].model.position.y;
-      let endZ = tableDecks[i].model.position.z;
-
-
-      const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card })
-        .to({ x: endX, y: endY, z: endZ }, 1000)
-        .easing(TWEEN.Easing.Exponential.Out)
-        .onUpdate((tween) => {
-          tween.card.model.position.x = tween.x;
-          tween.card.model.position.y = tween.y;
-          tween.card.model.position.z = tween.z;
-        })
-        .onComplete((tween) => {
-          tween.card.model.rotation.set(0, 0, 0);
-          tween.card.model.position.set(0, 0, card.DIMENSIONS.z * tableDecks[tween.i].getSize());
-          tableDecks[tween.i].addTop(tween.card);
-        });
-      tw.start();
-
-      await delay(100);
-    }
+    tableDecks[plr].addTop(card);
   }
 
   await delay(1000);
 
   // Flip each card face up
-  for (let i = 0; i < tableDecks.length; i++) {
-    if (!tableDecks[i].isEmpty()) {
-      tableDecks[i].flipTopUp();
-    }
-  }
+  playersInPlay.forEach((plr) => {
+    tableDecks[plr].flipTopUp();
+  });
+
+  await delay(1000);
 
   // Is one greater than the others?
-  for (let i = 0; i < tableDecks.length; i++) {
-    if (!tableDecks[i].isEmpty()) {
-      // continue working from here
+  let isWar = false;
+  let greatestValue = -1;
+  let winningPlr = -1; //plr with greatest card
+
+  playersInPlay.forEach((plr) => {
+    let topCard = tableDecks[plr].peekTop();
+
+    if (topCard.value > greatestValue) {
+      greatestValue = topCard.value;
+      winningPlr = plr;
+      isWar = false;
     }
+    else if (topCard.value == greatestValue) {
+      isWar = true;
+    }
+  });
+
+  playersInPlay.forEach((plr) => {
+    tableDecks[plr].flipTopDown();
+  });
+
+  console.log(isWar);
+
+  while (isWar) {
+  
+    greatestValue = -1;
+    winningPlr = -1;
+    isWar = false;
+
+    for(let i = 0; i < playersInPlay.length; i++)
+    {
+      let plr = playersInPlay[i];
+
+      for(let j = 0; j < 2; j++)
+      {
+        if (!playerDecks[plr].isEmpty())
+          tableDecks[plr].addTop(playerDecks[plr].takeTop());
+      }
+
+      await delay(1000);
+    }
+
+    playersInPlay.forEach((plr) => {
+      tableDecks[plr].flipTopUp();
+    });
+
+    playersInPlay.forEach((plr) => {
+
+      let topCard = tableDecks[plr].peekTop();
+
+      if (topCard.value > greatestValue) {
+        greatestValue = topCard.value;
+        winningPlr = plr;
+        isWar = false;
+      }
+      else if (topCard.value == greatestValue) {
+        isWar = true;
+      }
+    });
+
   }
 
+  playersInPlay.forEach((plr) => {
+    tableDecks[plr].flipTopDown();
+  });
+
+  //move all cards on table to winners deck
+  let winnerDeck = playerDecks[winningPlr];
+
+  playersInPlay.forEach((plr) => {
+    let tabled = tableDecks[plr];
+
+    while (!tabled.isEmpty()) {
+      let card = tabled.takeTop();
+      winnerDeck.addBottom(card);
+    }
+
+  });
+
+  console.log(playerDecks);
+  inTurn = false;
 } //end of startTurn
 
 
@@ -282,6 +372,7 @@ function initController() {
       case 'n':
       case 'N':
         startGame();
+        startTurn();
         break;
       case 'r':
       case 'R':
