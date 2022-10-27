@@ -81,8 +81,8 @@ function initGraphics() {
   pointLight = new THREE.PointLight(0xFFFFFF, 1);
   pointLight.position.set(0, 2, 0);
   pointLight.castShadow = true;
-  pointLight.shadow.mapSize.width = 10000;
-  pointLight.shadow.mapSize.height = 10000;
+  pointLight.shadow.mapSize.width = 2000;
+  pointLight.shadow.mapSize.height = 2000;
   scene.add(pointLight);
 
   // Game models
