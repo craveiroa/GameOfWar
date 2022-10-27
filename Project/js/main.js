@@ -18,6 +18,8 @@ let orbitControls;
 let pointX;
 let pointZ;
 let pointLight;
+let ambientLight;
+let ambientOn = true;
 
 //Logic Stuff
 let startDeck;
@@ -70,7 +72,7 @@ function initGraphics() {
 
   //Lighting
 
-  let ambientLight = new THREE.AmbientLight(0x0000FF, 0.1);
+  ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
   scene.add(ambientLight);
 
   pointX = 0;
@@ -79,8 +81,6 @@ function initGraphics() {
   pointLight.position.set(0, 2, 0);
   //pointLight.castShadow = true;
   scene.add(pointLight);
-  const helper = new THREE.PointLightHelper(pointLight);
-  scene.add(helper);
 
   // Game models
 
@@ -425,6 +425,10 @@ function initController() {
       case 'D':
         movePointLight('D');
         break;
+      case 'l':
+      case 'L':
+        toggleAmbient();
+        break;
     }
   }
 } //end of initController
@@ -473,5 +477,16 @@ function movePointLight(key) {
   else {
     pointX += 0.25;
     pointLight.position.set(pointX, 2, pointZ);
+  }
+}
+
+function toggleAmbient() {
+  ambientOn = !ambientOn;
+
+  if (ambientOn) {
+    ambientLight.intensity = 0.35;
+  }
+  else {
+    ambientLight.intensity = 0;
   }
 }
