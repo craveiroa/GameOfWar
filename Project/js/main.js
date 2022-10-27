@@ -81,6 +81,8 @@ function initGraphics() {
   pointLight = new THREE.PointLight(0xFFFFFF, 1);
   pointLight.position.set(0, 2, 0);
   pointLight.castShadow = true;
+  pointLight.shadow.mapSize.width = 10000;
+  pointLight.shadow.mapSize.height = 10000;
   scene.add(pointLight);
 
   // Game models
@@ -517,7 +519,7 @@ function toggleShadows() {
   renderer.shadowMap.enabled = !renderer.shadowMap.enabled;
   scene.traverse(function (child) {
     if (child.material) {
-      child.material.needsUpdate = true
+      child.material.needsUpdate = true;
     }
   })
 }
