@@ -6,6 +6,7 @@ import { Deck } from './Deck.js';
 import { StandardDeck } from './StandardDeck.js';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Vector3 } from 'three';
 
 
 //Graphics World
@@ -31,9 +32,9 @@ let inTurn = false;
 //Promise Stuff
 let promiseArray = [];
 
-function addPromise(tween) {
+function createTweenPromise(tween, onComplete) {
   promiseArray.push(
-    new Promise(function (resolve, reject) {
+    new Promise(function (resolve) {
       tween.onComplete((tween) => { 
         tween.card.model.rotation.set(0, 0, 0);
         tween.dest.addTop(tween.card);
@@ -43,17 +44,18 @@ function addPromise(tween) {
     ));
 }
 
-function transferCard(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, delay = 0)
+function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWEEN.Easing.Linear.None, delay = 0)
 {
   let card = startDeck.takeTop();
 
   card.model.rotation.set(Math.PI / 2, 0, 0)
 
-  scene.add(card.model);
-
   let beginX = startDeck.model.position.x;
   let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
   let beginZ = startDeck.model.position.z;
+
+  card.model.position.set( new Vector3(beginX, beginY, beginZ) );
+
   let endX = endDeck.model.position.x;
   let endY = endDeck.model.position.y + card.DIMENSIONS.z * (endDeck.getSize());
   let endZ = endDeck.model.position.z;
@@ -67,9 +69,12 @@ function transferCard(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, del
       tween.card.model.position.y = tween.y;
       tween.card.model.position.z = tween.z;
     });
+
   tw.start();
 
-  addPromise(tw);
+  scene.add(card.model);
+
+  return createTweenPromise(tw, onComplete);
 
 }
 
@@ -223,16 +228,15 @@ async function startGame() {
   startDeck.shuffle();
 
   let i = 0;
-  let delay = 0;
   while (!startDeck.isEmpty()) {
 
-    transferCard(startDeck, playerDecks[i], 
-        undefined, delay)
+    let promise = transferCard(startDeck, playerDecks[i], 
+        Deck.addTop, TWEEN.Easing.Sinusoidal.In);
+    promiseArray.push(promise);
 
     i = (i + 1) % numPlayers;
-    delay += 30;
     await setDelay(100);
-  }
+  } //end of while
   
   await Promise.all(promiseArray);
   promiseArray = [];
@@ -255,8 +259,12 @@ async function startTurn() {
   for (let i = 0; i < playersInPlay.length; i++) {
     let plr = playersInPlay[i];
 
-    if (playerDecks[plr].isEmpty())
+    if (playerDecks[plr].isEmpty()) {
       playersInPlay.splice(i, 1);
+      i--;
+    }
+    
+  
   }
 
   // Check if there is only one plr with cards remaining.
@@ -265,6 +273,8 @@ async function startTurn() {
     endGame(playersInPlay[0] + 1);
   }
 
+  console.log(playersInPlay);
+
   // If there is more than one deck with cards remaining then 
   // play out a turn with those decks
   for (let i = 0; i < playersInPlay.length; i++) {
@@ -272,19 +282,21 @@ async function startTurn() {
     let plr = playersInPlay[i];
 
     // Place top card on table
-    transferCard(playerDecks[plr], tableDecks[plr])
+    let promise = transferCard(playerDecks[plr], tableDecks[plr], undefined, TWEEN.Easing.Sinusoidal.In);
+    promiseArray.push(promise);
+    
+  } //end of for
 
-    await Promise.all(promiseArray);
-  }
+  await Promise.all(promiseArray);
+  promiseArray = [];
 
-  await setDelay(1000);
 
   // Flip each card face up
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopUp();
   });
 
-  await setDelay(1000);
+  await setDelay(2000);
 
   // Is one greater than the others?
   let isWar = false;
@@ -304,14 +316,11 @@ async function startTurn() {
     }
   });
 
-  await setDelay(1000)
-
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopDown();
   });
 
   await setDelay(1000)
-
 
   console.log(isWar);
 
@@ -325,21 +334,23 @@ async function startTurn() {
       let plr = playersInPlay[i];
 
       for (let j = 0; j < 2; j++) {
-        if (!playerDecks[plr].isEmpty())
-          tableDecks[plr].addTop(playerDecks[plr].takeTop());
-      }
+        if (!playerDecks[plr].isEmpty()) {
+          let promise = transferCard(playerDecks[i], tableDecks[i], Deck.addTop, TWEEN.Easing.Exponential.In);
+          promiseArray.push(promise);
+        } //end of if
+        await setDelay(100);
+      } //end of nested for
 
-      await setDelay(1000);
-    }
+    } //end  of for
 
-    await setDelay(3000)
+    await Promise.all(promiseArray);
+    promiseArray = [];
 
     playersInPlay.forEach((plr) => {
       tableDecks[plr].flipTopUp();
     });
 
-    await setDelay(3000)
-
+    await setDelay(2000)
 
     playersInPlay.forEach((plr) => {
 
@@ -355,7 +366,7 @@ async function startTurn() {
       }
     });
 
-  }
+  } //end of while
 
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopDown();
@@ -367,17 +378,22 @@ async function startTurn() {
   //move all cards on table to winners deck
   let winnerDeck = playerDecks[winningPlr];
 
-  playersInPlay.forEach(async (plr) => {
-    let tabled = tableDecks[plr];
+  for(let i = 0; i < playersInPlay.length; i++)
+  {
+    let tabled = tableDecks[i];
 
     while (!tabled.isEmpty()) {
-      transferCard(tabled, winnerDeck);
+      let promise = transferCard(tabled, winnerDeck, Deck.addBottom, TWEEN.Easing.Sinusoidal.In);
+      promiseArray.push(promise);
+      await setDelay(100);
     }
 
-    await Promise.all(promiseArray);
-    promiseArray = [];
+    await setDelay(100);
+  }
+ 
 
-  });
+  await Promise.all(promiseArray);
+  promiseArray = [];
 
   console.log(playerDecks);
   inTurn = false;
