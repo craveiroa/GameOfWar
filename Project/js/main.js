@@ -2,8 +2,6 @@ import '../style.css';
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js'
 
-import * as CONSTANTS from './constants.js';
-import { Card } from './Card.js';
 import { Deck } from './Deck.js';
 import { StandardDeck } from './StandardDeck.js';
 
@@ -13,7 +11,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 //Graphics World
 let scene, camera, renderer;
 let gameCanvas = document.getElementById('gameOfWar');
-let cardGeometry, cardMaterial;
 let orbitControls;
 let pointX;
 let pointZ;
@@ -27,9 +24,54 @@ let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
 let playersInPlay = [];
-let numPlayers = 3;
+let numPlayers = 8;
 let gameStart = false;
 let inTurn = false;
+
+//Promise Stuff
+let promiseArray = [];
+
+function addPromise(tween) {
+  promiseArray.push(
+    new Promise(function (resolve, reject) {
+      tween.onComplete((tween) => { 
+        tween.card.model.rotation.set(0, 0, 0);
+        tween.dest.addTop(tween.card);
+        resolve(tween);
+      });
+    }
+    ));
+}
+
+function transferCard(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, delay = 0)
+{
+  let card = startDeck.takeTop();
+
+  card.model.rotation.set(Math.PI / 2, 0, 0)
+
+  scene.add(card.model);
+
+  let beginX = startDeck.model.position.x;
+  let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
+  let beginZ = startDeck.model.position.z;
+  let endX = endDeck.model.position.x;
+  let endY = endDeck.model.position.y + card.DIMENSIONS.z * (endDeck.getSize());
+  let endZ = endDeck.model.position.z;
+
+  const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, dest: endDeck, card: card })
+    .to({ x: endX, y: endY, z: endZ }, 1000)
+    .easing(easing)
+    .delay(delay)
+    .onUpdate((tween) => {
+      tween.card.model.position.x = tween.x;
+      tween.card.model.position.y = tween.y;
+      tween.card.model.position.z = tween.z;
+    });
+  tw.start();
+
+  addPromise(tw);
+
+}
 
 /**
  * Startup Function
@@ -176,46 +218,26 @@ async function startGame() {
     return false;
 
   gameStart = true;
+  inTurn = true;
 
   startDeck.shuffle();
 
-
   let i = 0;
+  let delay = 0;
   while (!startDeck.isEmpty()) {
-    let card = startDeck.takeTop();
 
-    //card.model.rotation.set(Math.PI / 2, 0, 0)
+    transferCard(startDeck, playerDecks[i], 
+        undefined, delay)
 
-    scene.add(card.model);
-    /*
-        let beginX = card.model.position.x;
-        let beginY = card.model.position.y;
-        let beginZ = card.model.position.z;
-        let endX = playerDecks[i].model.position.x;
-        let endY = playerDecks[i].model.position.y + card.DIMENSIONS.z * (playerDecks[i].getSize() + 2);
-        let endZ = playerDecks[i].model.position.z;
-    
-        const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card })
-          .to({ x: endX, y: endY, z: endZ }, 1000)
-          .easing(TWEEN.Easing.Exponential.Out)
-          .onUpdate((tween) => {
-            tween.card.model.position.x = tween.x;
-            tween.card.model.position.y = tween.y;
-            tween.card.model.position.z = tween.z;
-          })
-          .onComplete((tween) => {
-            tween.card.model.rotation.set(0, 0, 0);
-            tween.card.model.position.set(0, 0, card.DIMENSIONS.z * playerDecks[tween.i].getSize());
-            
-          });
-        tw.start();
-    */
-
-    playerDecks[i].addTop(card);
     i = (i + 1) % numPlayers;
+    delay += 30;
+    await setDelay(100);
   }
-  await delay(1100);
+  
+  await Promise.all(promiseArray);
+  promiseArray = [];
 
+  inTurn = false;
 } //end of startGame
 
 /**
@@ -250,47 +272,19 @@ async function startTurn() {
     let plr = playersInPlay[i];
 
     // Place top card on table
-    let card = playerDecks[plr].takeTop();
-    scene.add(card.model);
+    transferCard(playerDecks[plr], tableDecks[plr])
 
-    /*
-    let beginX = playerDecks[i].model.position.x;
-    let beginY = playerDecks[i].model.position.y;
-    let beginZ = playerDecks[i].model.position.z;
-    let endX = tableDecks[i].model.position.x;
-    let endY = tableDecks[i].model.position.y;
-    let endZ = tableDecks[i].model.position.z;
-
-
-    const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card })
-      .to({ x: endX, y: endY, z: endZ }, 1000)
-      .easing(TWEEN.Easing.Exponential.Out)
-      .onUpdate((tween) => {
-        tween.card.model.position.x = tween.x;
-        tween.card.model.position.y = tween.y;
-        tween.card.model.position.z = tween.z;
-      })
-      .onComplete((tween) => {
-        tween.card.model.rotation.set(0, 0, 0);
-        tween.card.model.position.set(0, 0, card.DIMENSIONS.z * tableDecks[tween.i].getSize());
-        tableDecks[tween.i].addTop(tween.card);
-      });
-    tw.start();
-
-    await delay(100);
-    */
-
-    tableDecks[plr].addTop(card);
+    await Promise.all(promiseArray);
   }
 
-  await delay(1000);
+  await setDelay(1000);
 
   // Flip each card face up
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopUp();
   });
 
-  await delay(1000);
+  await setDelay(1000);
 
   // Is one greater than the others?
   let isWar = false;
@@ -310,13 +304,13 @@ async function startTurn() {
     }
   });
 
-  await delay(1000)
+  await setDelay(1000)
 
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopDown();
   });
 
-  await delay(1000)
+  await setDelay(1000)
 
 
   console.log(isWar);
@@ -331,23 +325,20 @@ async function startTurn() {
       let plr = playersInPlay[i];
 
       for (let j = 0; j < 2; j++) {
-        if (!playerDecks[plr].isEmpty()) {
-          let card = playerDecks[plr].takeTop();
-          scene.add(card.model);
-          tableDecks[plr].addTop(card);
-          await delay(500)
-
-        }
+        if (!playerDecks[plr].isEmpty())
+          tableDecks[plr].addTop(playerDecks[plr].takeTop());
       }
+
+      await setDelay(1000);
     }
 
-    await delay(3000)
+    await setDelay(3000)
 
     playersInPlay.forEach((plr) => {
       tableDecks[plr].flipTopUp();
     });
 
-    await delay(3000)
+    await setDelay(3000)
 
 
     playersInPlay.forEach((plr) => {
@@ -370,19 +361,21 @@ async function startTurn() {
     tableDecks[plr].flipTopDown();
   });
 
-  await delay(1000)
+  await setDelay(1000)
 
 
   //move all cards on table to winners deck
   let winnerDeck = playerDecks[winningPlr];
 
-  playersInPlay.forEach((plr) => {
+  playersInPlay.forEach(async (plr) => {
     let tabled = tableDecks[plr];
 
     while (!tabled.isEmpty()) {
-      let card = tabled.takeTop();
-      winnerDeck.addBottom(card);
+      transferCard(tabled, winnerDeck);
     }
+
+    await Promise.all(promiseArray);
+    promiseArray = [];
 
   });
 
@@ -407,8 +400,11 @@ function initController() {
     switch (e.key) {
       case 'n':
       case 'N':
-        startGame();
-        startTurn();
+        if(gameStart)
+          startTurn();
+        else
+          startGame();
+          
         break;
       case 'r':
       case 'R':
@@ -470,7 +466,7 @@ function render() {
 
 main();
 
-function delay(time) {
+function setDelay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
