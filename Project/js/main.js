@@ -25,7 +25,7 @@ let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
 let playersInPlay = [];
-let numPlayers = 7;
+let numPlayers = 3;
 let gameStart = false;
 let inTurn = false;
 let list = document.getElementById("myList");
@@ -414,7 +414,7 @@ async function startTurn() {
     let li = document.createElement("li");
     li.innerText = 'Player ' + (i + 1) + ': ' + playerDecks[i].getSize();
     li.style.color = "white";
-    li.style.fontSize = "10px";
+    li.style.fontSize = "1rem";
     li.style.listStyleType = "none";
     li.style.display = "inline";
     li.style.marginRight = "1vw";
