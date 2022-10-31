@@ -18,7 +18,7 @@ export class StandardDeck extends Deck {
         var cardStr = 'assets/' + cardTxtr + '.jpg';
 
         for (let s = Constants.SPADES; s <= Constants.CLUBS; s++) {
-            for (let v = 0; v < 13; v++) {
+            for (let v = 2; v < 15; v++) {
                 var material = new THREE.MeshBasicMaterial({
                     color: 0xFFFFFF
                 });
@@ -26,7 +26,7 @@ export class StandardDeck extends Deck {
                     material,
                     material,
                     material,
-                    material, 
+                    material,
                     new THREE.MeshBasicMaterial({
                         map: textureLoader.load(cardStr),
                     }),
@@ -44,11 +44,11 @@ export class StandardDeck extends Deck {
 }
 
 
-// ace of spades -> king of spades
+// 2 of spades -> ace of spades
 // 1 - 13
-// ace of hearts -> king of hearts
+// 2 of hearts -> ace of hearts
 // 14-26
-// ace of diamonds -> king of diamonds
+// 2 of diamonds -> ace of diamonds
 // 27-39
-// ace of clubs -> king of clubs
+// 2 of clubs -> ace of clubs
 // 40-52

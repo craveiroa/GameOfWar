@@ -2,28 +2,81 @@ import '../style.css';
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js'
 
-import * as CONSTANTS from './constants.js';
-import { Card } from './Card.js';
 import { Deck } from './Deck.js';
 import { StandardDeck } from './StandardDeck.js';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Vector3 } from 'three';
 
 
 //Graphics World
 let scene, camera, renderer;
 let gameCanvas = document.getElementById('gameOfWar');
-let cardGeometry, cardMaterial;
 let orbitControls;
+let pointX;
+let pointZ;
+let pointLight;
+let ambientLight;
+let ambientOn = true;
+let pointOn = true;
 
 //Logic Stuff
 let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
 let playersInPlay = [];
-let numPlayers = 3;
+let numPlayers = 8;
 let gameStart = false;
 let inTurn = false;
+
+//Promise Stuff
+let promiseArray = [];
+
+function createTweenPromise(tween, onComplete) {
+  promiseArray.push(
+    new Promise(function (resolve) {
+      tween.onComplete((tween) => { 
+        tween.card.model.rotation.set(0, 0, 0);
+        tween.dest.addTop(tween.card);
+        resolve(tween);
+      });
+    }
+    ));
+}
+
+function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWEEN.Easing.Linear.None, delay = 0)
+{
+  let card = startDeck.takeTop();
+
+  card.model.rotation.set(Math.PI / 2, 0, 0)
+
+  let beginX = startDeck.model.position.x;
+  let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
+  let beginZ = startDeck.model.position.z;
+
+  card.model.position.set( new Vector3(beginX, beginY, beginZ) );
+
+  let endX = endDeck.model.position.x;
+  let endY = endDeck.model.position.y + card.DIMENSIONS.z * (endDeck.getSize());
+  let endZ = endDeck.model.position.z;
+
+  const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, dest: endDeck, card: card })
+    .to({ x: endX, y: endY, z: endZ }, 1000)
+    .easing(easing)
+    .delay(delay)
+    .onUpdate((tween) => {
+      tween.card.model.position.x = tween.x;
+      tween.card.model.position.y = tween.y;
+      tween.card.model.position.z = tween.z;
+    });
+
+  tw.start();
+
+  scene.add(card.model);
+
+  return createTweenPromise(tw, onComplete);
+
+}
 
 /**
  * Startup Function
@@ -67,17 +120,32 @@ function initGraphics() {
 
   //Lighting
 
-  let ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.1);
+  ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
   scene.add(ambientLight);
 
-  let pointLight = new THREE.PointLight(0xFFFFFF);
-  pointLight.position.y = 5.0;
-
+  pointX = 0;
+  pointZ = 0;
+  pointLight = new THREE.PointLight(0xFFFFFF, 1);
+  pointLight.position.set(0, 2, 0);
+  pointLight.castShadow = true;
+  pointLight.shadow.mapSize.width = 2000;
+  pointLight.shadow.mapSize.height = 2000;
   scene.add(pointLight);
 
   // Game models
 
   //Table
+
+  var textureLoader = new THREE.TextureLoader();
+
+  const tableGeometry = new THREE.CylinderGeometry(0.7, 0.7, 0.05, 32);
+  const tableMaterial = new THREE.MeshStandardMaterial({
+    map: textureLoader.load('assets/wood.jpeg'),
+  });
+  const table = new THREE.Mesh(tableGeometry, tableMaterial);
+  table.position.setY(-0.025);
+  table.receiveShadow = true;
+  scene.add(table)
 
   //Decks
 
@@ -118,6 +186,7 @@ function initGraphics() {
   });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(gameCanvas.clientWidth, gameCanvas.clientHeight);
+  renderer.shadowMap.enabled = true;
 
   console.log(scene);
 } //end of initGraphics
@@ -154,46 +223,25 @@ async function startGame() {
     return false;
 
   gameStart = true;
+  inTurn = true;
 
   startDeck.shuffle();
 
-
   let i = 0;
   while (!startDeck.isEmpty()) {
-    let card = startDeck.takeTop();
 
-    //card.model.rotation.set(Math.PI / 2, 0, 0)
+    let promise = transferCard(startDeck, playerDecks[i], 
+        Deck.addTop, TWEEN.Easing.Sinusoidal.In);
+    promiseArray.push(promise);
 
-    scene.add(card.model);
-    /*
-        let beginX = card.model.position.x;
-        let beginY = card.model.position.y;
-        let beginZ = card.model.position.z;
-        let endX = playerDecks[i].model.position.x;
-        let endY = playerDecks[i].model.position.y + card.DIMENSIONS.z * (playerDecks[i].getSize() + 2);
-        let endZ = playerDecks[i].model.position.z;
-    
-        const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card })
-          .to({ x: endX, y: endY, z: endZ }, 1000)
-          .easing(TWEEN.Easing.Exponential.Out)
-          .onUpdate((tween) => {
-            tween.card.model.position.x = tween.x;
-            tween.card.model.position.y = tween.y;
-            tween.card.model.position.z = tween.z;
-          })
-          .onComplete((tween) => {
-            tween.card.model.rotation.set(0, 0, 0);
-            tween.card.model.position.set(0, 0, card.DIMENSIONS.z * playerDecks[tween.i].getSize());
-            
-          });
-        tw.start();
-    */
-
-    playerDecks[i].addTop(card);
     i = (i + 1) % numPlayers;
-  }
-  await delay(1100);
+    await setDelay(100);
+  } //end of while
+  
+  await Promise.all(promiseArray);
+  promiseArray = [];
 
+  inTurn = false;
 } //end of startGame
 
 /**
@@ -211,8 +259,12 @@ async function startTurn() {
   for (let i = 0; i < playersInPlay.length; i++) {
     let plr = playersInPlay[i];
 
-    if (playerDecks[plr].isEmpty())
+    if (playerDecks[plr].isEmpty()) {
       playersInPlay.splice(i, 1);
+      i--;
+    }
+    
+  
   }
 
   // Check if there is only one plr with cards remaining.
@@ -221,6 +273,8 @@ async function startTurn() {
     endGame(playersInPlay[0] + 1);
   }
 
+  console.log(playersInPlay);
+
   // If there is more than one deck with cards remaining then 
   // play out a turn with those decks
   for (let i = 0; i < playersInPlay.length; i++) {
@@ -228,47 +282,21 @@ async function startTurn() {
     let plr = playersInPlay[i];
 
     // Place top card on table
-    let card = playerDecks[plr].takeTop();
-    scene.add(card.model);
+    let promise = transferCard(playerDecks[plr], tableDecks[plr], undefined, TWEEN.Easing.Sinusoidal.In);
+    promiseArray.push(promise);
+    
+  } //end of for
 
-    /*
-    let beginX = playerDecks[i].model.position.x;
-    let beginY = playerDecks[i].model.position.y;
-    let beginZ = playerDecks[i].model.position.z;
-    let endX = tableDecks[i].model.position.x;
-    let endY = tableDecks[i].model.position.y;
-    let endZ = tableDecks[i].model.position.z;
+  await Promise.all(promiseArray);
+  promiseArray = [];
 
-
-    const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, i: i, card: card })
-      .to({ x: endX, y: endY, z: endZ }, 1000)
-      .easing(TWEEN.Easing.Exponential.Out)
-      .onUpdate((tween) => {
-        tween.card.model.position.x = tween.x;
-        tween.card.model.position.y = tween.y;
-        tween.card.model.position.z = tween.z;
-      })
-      .onComplete((tween) => {
-        tween.card.model.rotation.set(0, 0, 0);
-        tween.card.model.position.set(0, 0, card.DIMENSIONS.z * tableDecks[tween.i].getSize());
-        tableDecks[tween.i].addTop(tween.card);
-      });
-    tw.start();
-
-    await delay(100);
-    */
-
-    tableDecks[plr].addTop(card);
-  }
-
-  await delay(1000);
 
   // Flip each card face up
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopUp();
   });
 
-  await delay(1000);
+  await setDelay(2000);
 
   // Is one greater than the others?
   let isWar = false;
@@ -292,30 +320,37 @@ async function startTurn() {
     tableDecks[plr].flipTopDown();
   });
 
+  await setDelay(1000)
+
   console.log(isWar);
 
   while (isWar) {
-  
+
     greatestValue = -1;
     winningPlr = -1;
     isWar = false;
 
-    for(let i = 0; i < playersInPlay.length; i++)
-    {
+    for (let i = 0; i < playersInPlay.length; i++) {
       let plr = playersInPlay[i];
 
-      for(let j = 0; j < 2; j++)
-      {
-        if (!playerDecks[plr].isEmpty())
-          tableDecks[plr].addTop(playerDecks[plr].takeTop());
-      }
+      for (let j = 0; j < 2; j++) {
+        if (!playerDecks[plr].isEmpty()) {
+          let promise = transferCard(playerDecks[i], tableDecks[i], Deck.addTop, TWEEN.Easing.Exponential.In);
+          promiseArray.push(promise);
+        } //end of if
+        await setDelay(100);
+      } //end of nested for
 
-      await delay(1000);
-    }
+    } //end  of for
+
+    await Promise.all(promiseArray);
+    promiseArray = [];
 
     playersInPlay.forEach((plr) => {
       tableDecks[plr].flipTopUp();
     });
+
+    await setDelay(2000)
 
     playersInPlay.forEach((plr) => {
 
@@ -331,24 +366,34 @@ async function startTurn() {
       }
     });
 
-  }
+  } //end of while
 
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopDown();
   });
 
+  await setDelay(1000)
+
+
   //move all cards on table to winners deck
   let winnerDeck = playerDecks[winningPlr];
 
-  playersInPlay.forEach((plr) => {
-    let tabled = tableDecks[plr];
+  for(let i = 0; i < playersInPlay.length; i++)
+  {
+    let tabled = tableDecks[i];
 
     while (!tabled.isEmpty()) {
-      let card = tabled.takeTop();
-      winnerDeck.addBottom(card);
+      let promise = transferCard(tabled, winnerDeck, Deck.addBottom, TWEEN.Easing.Sinusoidal.In);
+      promiseArray.push(promise);
+      await setDelay(100);
     }
 
-  });
+    await setDelay(100);
+  }
+ 
+
+  await Promise.all(promiseArray);
+  promiseArray = [];
 
   console.log(playerDecks);
   inTurn = false;
@@ -371,12 +416,43 @@ function initController() {
     switch (e.key) {
       case 'n':
       case 'N':
-        startGame();
-        startTurn();
+        if(gameStart)
+          startTurn();
+        else
+          startGame();
+          
         break;
       case 'r':
       case 'R':
         reset();
+        break;
+      case 'w':
+      case 'W':
+        movePointLight('W');
+        break;
+      case 'a':
+      case 'A':
+        movePointLight('A');
+        break;
+      case 's':
+      case 'S':
+        movePointLight('S');
+        break;
+      case 'd':
+      case 'D':
+        movePointLight('D');
+        break;
+      case 'l':
+      case 'L':
+        toggleAmbient();
+        break;
+      case 'p':
+      case 'P':
+        togglePoint();
+        break;
+      case 'm':
+      case 'M':
+        toggleShadows();
         break;
     }
   }
@@ -406,6 +482,56 @@ function render() {
 
 main();
 
-function delay(time) {
+function setDelay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function movePointLight(key) {
+  if (key == 'W') {
+    pointZ -= 0.25;
+    pointLight.position.set(pointX, 2, pointZ);
+  }
+  else if (key == 'A') {
+    pointX -= 0.25;
+    pointLight.position.set(pointX, 2, pointZ);
+  }
+  else if (key == 'S') {
+    pointZ += 0.25;
+    pointLight.position.set(pointX, 2, pointZ);
+  }
+  else {
+    pointX += 0.25;
+    pointLight.position.set(pointX, 2, pointZ);
+  }
+}
+
+function toggleAmbient() {
+  ambientOn = !ambientOn;
+
+  if (ambientOn) {
+    ambientLight.intensity = 0.35;
+  }
+  else {
+    ambientLight.intensity = 0;
+  }
+}
+
+function togglePoint() {
+  pointOn = !pointOn;
+
+  if (pointOn) {
+    pointLight.intensity = 1;
+  }
+  else {
+    pointLight.intensity = 0;
+  }
+}
+
+function toggleShadows() {
+  renderer.shadowMap.enabled = !renderer.shadowMap.enabled;
+  scene.traverse(function (child) {
+    if (child.material) {
+      child.material.needsUpdate = true;
+    }
+  })
 }
