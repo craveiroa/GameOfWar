@@ -95,7 +95,6 @@ function main() {
  * Preloads all assets (textures and models)
  */
 function loadAssets() {
-
 } //end of loadAssets
 
 /**
@@ -120,7 +119,7 @@ function initGraphics() {
 
   //Lighting
 
-  ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+  ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambientLight);
 
   pointX = 0;
@@ -188,7 +187,6 @@ function initGraphics() {
   renderer.setSize(gameCanvas.clientWidth, gameCanvas.clientHeight);
   renderer.shadowMap.enabled = true;
 
-  console.log(scene);
 } //end of initGraphics
 
 //Here We make our game :) 
@@ -263,8 +261,7 @@ async function startTurn() {
       playersInPlay.splice(i, 1);
       i--;
     }
-    
-  
+
   }
 
   // Check if there is only one plr with cards remaining.
@@ -273,7 +270,6 @@ async function startTurn() {
     endGame(playersInPlay[0] + 1);
   }
 
-  console.log(playersInPlay);
 
   // If there is more than one deck with cards remaining then 
   // play out a turn with those decks
@@ -320,8 +316,6 @@ async function startTurn() {
     tableDecks[plr].flipTopDown();
   });
 
-  await setDelay(1000)
-
   console.log(isWar);
 
   while (isWar) {
@@ -335,10 +329,11 @@ async function startTurn() {
 
       for (let j = 0; j < 2; j++) {
         if (!playerDecks[plr].isEmpty()) {
-          let promise = transferCard(playerDecks[i], tableDecks[i], Deck.addTop, TWEEN.Easing.Exponential.In);
+          console.log(playerDecks[plr]);
+          let promise = transferCard(playerDecks[plr], tableDecks[plr], Deck.addTop, TWEEN.Easing.Sinusoidal.In);
           promiseArray.push(promise);
+          await setDelay(100);
         } //end of if
-        await setDelay(100);
       } //end of nested for
 
     } //end  of for
@@ -380,7 +375,9 @@ async function startTurn() {
 
   for(let i = 0; i < playersInPlay.length; i++)
   {
-    let tabled = tableDecks[i];
+    let plr = playersInPlay[i];
+
+    let tabled = tableDecks[plr];
 
     while (!tabled.isEmpty()) {
       let promise = transferCard(tabled, winnerDeck, Deck.addBottom, TWEEN.Easing.Sinusoidal.In);
@@ -395,8 +392,9 @@ async function startTurn() {
   await Promise.all(promiseArray);
   promiseArray = [];
 
-  console.log(playerDecks);
   inTurn = false;
+
+  console.log(playersInPlay)
 } //end of startTurn
 
 
