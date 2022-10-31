@@ -8,6 +8,7 @@ import { StandardDeck } from './StandardDeck.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Vector3 } from 'three';
 
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 //Graphics World
 let scene, camera, renderer;
@@ -19,64 +20,19 @@ let pointLight;
 let ambientLight;
 let ambientOn = true;
 let pointOn = true;
+let table;
 
 //Logic Stuff
 let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
 let playersInPlay = [];
-let numPlayers = 8;
+let numPlayers = 12;
 let gameStart = false;
 let inTurn = false;
 
 //Promise Stuff
 let promiseArray = [];
-
-function createTweenPromise(tween, onComplete) {
-  promiseArray.push(
-    new Promise(function (resolve) {
-      tween.onComplete((tween) => { 
-        tween.card.model.rotation.set(0, 0, 0);
-        tween.dest.addTop(tween.card);
-        resolve(tween);
-      });
-    }
-    ));
-}
-
-function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWEEN.Easing.Linear.None, delay = 0)
-{
-  let card = startDeck.takeTop();
-
-  card.model.rotation.set(Math.PI / 2, 0, 0)
-
-  let beginX = startDeck.model.position.x;
-  let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
-  let beginZ = startDeck.model.position.z;
-
-  card.model.position.set( new Vector3(beginX, beginY, beginZ) );
-
-  let endX = endDeck.model.position.x;
-  let endY = endDeck.model.position.y + card.DIMENSIONS.z * (endDeck.getSize());
-  let endZ = endDeck.model.position.z;
-
-  const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, dest: endDeck, card: card })
-    .to({ x: endX, y: endY, z: endZ }, 1000)
-    .easing(easing)
-    .delay(delay)
-    .onUpdate((tween) => {
-      tween.card.model.position.x = tween.x;
-      tween.card.model.position.y = tween.y;
-      tween.card.model.position.z = tween.z;
-    });
-
-  tw.start();
-
-  scene.add(card.model);
-
-  return createTweenPromise(tw, onComplete);
-
-}
 
 /**
  * Startup Function
@@ -95,6 +51,25 @@ function main() {
  * Preloads all assets (textures and models)
  */
 function loadAssets() {
+
+  let loader = new GLTFLoader();
+
+  let promise = loader.load('../assets/models/pokerTable.gltf', function (gltf) {
+
+    table = gltf.scene.children[0];
+    table.position.y = -0.045;
+    table.scale.setX(0.6);
+    table.scale.setZ(0.6);
+    table.receiveShadow = true;
+    scene.add(table);
+  
+  }, undefined, function (error) {
+  
+    console.error(error);
+  
+  });
+
+  console.log(promise);
 
 } //end of loadAssets
 
@@ -133,19 +108,6 @@ function initGraphics() {
   scene.add(pointLight);
 
   // Game models
-
-  //Table
-
-  var textureLoader = new THREE.TextureLoader();
-
-  const tableGeometry = new THREE.CylinderGeometry(0.7, 0.7, 0.05, 32);
-  const tableMaterial = new THREE.MeshStandardMaterial({
-    map: textureLoader.load('assets/wood.jpeg'),
-  });
-  const table = new THREE.Mesh(tableGeometry, tableMaterial);
-  table.position.setY(-0.025);
-  table.receiveShadow = true;
-  scene.add(table)
 
   //Decks
 
@@ -534,4 +496,50 @@ function toggleShadows() {
       child.material.needsUpdate = true;
     }
   })
+}
+
+function createTweenPromise(tween, onComplete) {
+  promiseArray.push(
+    new Promise(function (resolve) {
+      tween.onComplete((tween) => { 
+        tween.card.model.rotation.set(0, 0, 0);
+        tween.dest.addTop(tween.card);
+        resolve(tween);
+      });
+    }
+    ));
+}
+
+function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWEEN.Easing.Linear.None, delay = 0)
+{
+  let card = startDeck.takeTop();
+
+  card.model.rotation.set(Math.PI / 2, 0, 0)
+
+  let beginX = startDeck.model.position.x;
+  let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
+  let beginZ = startDeck.model.position.z;
+
+  card.model.position.set( new Vector3(beginX, beginY, beginZ) );
+
+  let endX = endDeck.model.position.x;
+  let endY = endDeck.model.position.y + card.DIMENSIONS.z * (endDeck.getSize());
+  let endZ = endDeck.model.position.z;
+
+  const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, dest: endDeck, card: card })
+    .to({ x: endX, y: endY, z: endZ }, 1000)
+    .easing(easing)
+    .delay(delay)
+    .onUpdate((tween) => {
+      tween.card.model.position.x = tween.x;
+      tween.card.model.position.y = tween.y;
+      tween.card.model.position.z = tween.z;
+    });
+
+  tw.start();
+
+  scene.add(card.model);
+
+  return createTweenPromise(tw, onComplete);
+
 }
