@@ -25,9 +25,10 @@ let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
 let playersInPlay = [];
-let numPlayers = 8;
+let numPlayers = 7;
 let gameStart = false;
 let inTurn = false;
+let list = document.getElementById("myList");
 
 //Promise Stuff
 let promiseArray = [];
@@ -35,7 +36,7 @@ let promiseArray = [];
 function createTweenPromise(tween, onComplete) {
   promiseArray.push(
     new Promise(function (resolve) {
-      tween.onComplete((tween) => { 
+      tween.onComplete((tween) => {
         tween.card.model.rotation.set(0, 0, 0);
         tween.dest.addTop(tween.card);
         resolve(tween);
@@ -44,8 +45,7 @@ function createTweenPromise(tween, onComplete) {
     ));
 }
 
-function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWEEN.Easing.Linear.None, delay = 0)
-{
+function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWEEN.Easing.Linear.None, delay = 0) {
   let card = startDeck.takeTop();
 
   card.model.rotation.set(Math.PI / 2, 0, 0)
@@ -54,7 +54,7 @@ function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWE
   let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
   let beginZ = startDeck.model.position.z;
 
-  card.model.position.set( new Vector3(beginX, beginY, beginZ) );
+  card.model.position.set(new Vector3(beginX, beginY, beginZ));
 
   let endX = endDeck.model.position.x;
   let endY = endDeck.model.position.y + card.DIMENSIONS.z * (endDeck.getSize());
@@ -230,18 +230,31 @@ async function startGame() {
   let i = 0;
   while (!startDeck.isEmpty()) {
 
-    let promise = transferCard(startDeck, playerDecks[i], 
-        Deck.addTop, TWEEN.Easing.Sinusoidal.In);
+    let promise = transferCard(startDeck, playerDecks[i],
+      Deck.addTop, TWEEN.Easing.Sinusoidal.In);
     promiseArray.push(promise);
 
     i = (i + 1) % numPlayers;
     await setDelay(100);
   } //end of while
-  
+
   await Promise.all(promiseArray);
   promiseArray = [];
 
   inTurn = false;
+
+  list.innerHTML = '';
+
+  for (let i = 0; i < playerDecks.length; i++) {
+    let li = document.createElement("li");
+    li.innerText = 'Player ' + (i + 1) + ': ' + playerDecks[i].getSize();
+    li.style.color = "white";
+    li.style.fontSize = "10px";
+    li.style.listStyleType = "none";
+    li.style.display = "inline";
+    li.style.marginRight = "1vw";
+    list.appendChild(li);
+  }
 } //end of startGame
 
 /**
@@ -263,8 +276,8 @@ async function startTurn() {
       playersInPlay.splice(i, 1);
       i--;
     }
-    
-  
+
+
   }
 
   // Check if there is only one plr with cards remaining.
@@ -284,7 +297,7 @@ async function startTurn() {
     // Place top card on table
     let promise = transferCard(playerDecks[plr], tableDecks[plr], undefined, TWEEN.Easing.Sinusoidal.In);
     promiseArray.push(promise);
-    
+
   } //end of for
 
   await Promise.all(promiseArray);
@@ -378,8 +391,7 @@ async function startTurn() {
   //move all cards on table to winners deck
   let winnerDeck = playerDecks[winningPlr];
 
-  for(let i = 0; i < playersInPlay.length; i++)
-  {
+  for (let i = 0; i < playersInPlay.length; i++) {
     let tabled = tableDecks[i];
 
     while (!tabled.isEmpty()) {
@@ -390,13 +402,30 @@ async function startTurn() {
 
     await setDelay(100);
   }
- 
+
 
   await Promise.all(promiseArray);
   promiseArray = [];
 
   console.log(playerDecks);
   inTurn = false;
+
+
+
+  list.innerHTML = '';
+
+  for (let i = 0; i < playerDecks.length; i++) {
+    let li = document.createElement("li");
+    li.innerText = 'Player ' + (i + 1) + ': ' + playerDecks[i].getSize();
+    li.style.color = "white";
+    li.style.fontSize = "10px";
+    li.style.listStyleType = "none";
+    li.style.display = "inline";
+    li.style.marginRight = "1vw";
+    list.appendChild(li);
+  }
+
+
 } //end of startTurn
 
 
@@ -416,11 +445,11 @@ function initController() {
     switch (e.key) {
       case 'n':
       case 'N':
-        if(gameStart)
+        if (gameStart)
           startTurn();
         else
           startGame();
-          
+
         break;
       case 'r':
       case 'R':
