@@ -20,7 +20,6 @@ let pointLight;
 let ambientLight;
 let ambientOn = true;
 let pointOn = true;
-let table;
 
 //Logic Stuff
 let startDeck;
@@ -54,14 +53,25 @@ function loadAssets() {
 
   let loader = new GLTFLoader();
 
-  let promise = loader.load('../assets/models/pokerTable.gltf', function (gltf) {
+ loader.load('../assets/models/pokerScene.gltf', function (gltf) {
 
+  console.log(gltf);
+
+    let props = gltf.scene;
+    props.position.y = -0.045;
+    props.scale.setX(0.6);
+    props.scale.setZ(0.6);
+    props.scale.setY(0.6)
+    scene.add(props);
+
+    /*
     table = gltf.scene.children[0];
     table.position.y = -0.045;
     table.scale.setX(0.6);
     table.scale.setZ(0.6);
     table.receiveShadow = true;
     scene.add(table);
+    */
   
   }, undefined, function (error) {
   
@@ -69,7 +79,6 @@ function loadAssets() {
   
   });
 
-  console.log(promise);
 
 } //end of loadAssets
 
