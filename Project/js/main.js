@@ -19,6 +19,9 @@ let pointLight;
 let ambientLight;
 let ambientOn = true;
 let pointOn = true;
+let d1 = 100;
+let d2 = 2000;
+let d3 = 1000;
 
 //Logic Stuff
 let startDeck;
@@ -61,7 +64,7 @@ function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWE
   let endZ = endDeck.model.position.z;
 
   const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, dest: endDeck, card: card })
-    .to({ x: endX, y: endY, z: endZ }, 1000)
+    .to({ x: endX, y: endY, z: endZ }, d3)
     .easing(easing)
     .delay(delay)
     .onUpdate((tween) => {
@@ -233,7 +236,7 @@ async function startGame() {
     promiseArray.push(promise);
 
     i = (i + 1) % numPlayers;
-    await setDelay(100);
+    await setDelay(d1);
   } //end of while
 
   await Promise.all(promiseArray);
@@ -305,7 +308,7 @@ async function startTurn() {
     tableDecks[plr].flipTopUp();
   });
 
-  await setDelay(2000);
+  await setDelay(d2);
 
   // Is one greater than the others?
   let isWar = false;
@@ -345,7 +348,7 @@ async function startTurn() {
           console.log(playerDecks[plr]);
           let promise = transferCard(playerDecks[plr], tableDecks[plr], Deck.addTop, TWEEN.Easing.Sinusoidal.In);
           promiseArray.push(promise);
-          await setDelay(100);
+          await setDelay(d1);
         } //end of if
       } //end of nested for
 
@@ -358,7 +361,7 @@ async function startTurn() {
       tableDecks[plr].flipTopUp();
     });
 
-    await setDelay(2000)
+    await setDelay(d2)
 
     playersInPlay.forEach((plr) => {
 
@@ -380,7 +383,7 @@ async function startTurn() {
     tableDecks[plr].flipTopDown();
   });
 
-  await setDelay(1000)
+  await setDelay(d3)
 
 
   //move all cards on table to winners deck
@@ -394,10 +397,10 @@ async function startTurn() {
     while (!tabled.isEmpty()) {
       let promise = transferCard(tabled, winnerDeck, Deck.addBottom, TWEEN.Easing.Sinusoidal.In);
       promiseArray.push(promise);
-      await setDelay(100);
+      await setDelay(d1);
     }
 
-    await setDelay(100);
+    await setDelay(d1);
   }
 
 
@@ -480,6 +483,14 @@ function initController() {
       case 'M':
         toggleShadows();
         break;
+      case 'f':
+      case 'F':
+        fasterGame();
+        break;
+      case 'g':
+      case 'G':
+        slowerGame();
+        break;
     }
   }
 } //end of initController
@@ -560,4 +571,16 @@ function toggleShadows() {
       child.material.needsUpdate = true;
     }
   })
+}
+
+function fasterGame() {
+  d1 /= 2;
+  d2 /= 2;
+  d3 /= 2;
+}
+
+function slowerGame() {
+  d1 *= 2;
+  d2 *= 2;
+  d3 *= 2;
 }
