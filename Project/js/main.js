@@ -6,15 +6,20 @@ import { Deck } from './Deck.js';
 import { StandardDeck } from './StandardDeck.js';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Vector3 } from 'three';
+import { LoadingManager, Mesh, MeshStandardMaterial, Vector3 } from 'three';
 
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+
+import {TextGeometry} from 'three/examples/jsm/geometries/TextGeometry';
 
 //Dom elements
 let gameCanvas = document.getElementById('game-of-war');
 
 //Graphics World
 let scene, camera, renderer;
+let font;
+let winText;
 let orbitControls;
 let pointX;
 let pointZ;
@@ -28,7 +33,7 @@ let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
 let playersInPlay = [];
-let numPlayers = 3;
+let numPlayers = 1;
 let gameStart = false;
 let inTurn = false;
 
@@ -136,6 +141,14 @@ loadingManager.onLoad = function() {
   
   });
 
+  //load the font for later use
+  let fontLoader = new FontLoader(loadingManager);
+
+  fontLoader.load( 'node_modules/three/examples/fonts/helvetiker_bold.typeface.json', function (f) {
+    font = f;
+    console.log(font);
+  });
+
 
 } //end of loadAssets
 
@@ -170,8 +183,8 @@ function initGraphics() {
   pointLight.position.set(0, 3, 0);
   pointLight.castShadow = true;
   pointLight.shadow.bias = - 0.00005;
-  pointLight.shadow.mapSize.width = 1024;
-  pointLight.shadow.mapSize.height = 1024;
+  pointLight.shadow.mapSize.width = 2048;
+  pointLight.shadow.mapSize.height = 2048;
   scene.add(pointLight);
 
   const sphereSize = 1;
@@ -230,7 +243,13 @@ function initGraphics() {
  * reset the game
  */
 function reset() {
+
+  if(inTurn)
+    return;
+
   scene.remove(startDeck.model);
+  scene.remove(winText);
+
   startDeck = new StandardDeck();
   scene.add(startDeck.model);
 
@@ -254,6 +273,8 @@ function reset() {
 async function startGame() {
   if (gameStart)
     return false;
+
+  reset();
 
   gameStart = true;
   inTurn = true;
@@ -432,8 +453,28 @@ async function startTurn() {
  * Ends the game, typically when a player wins
  */
 function endGame(winner) {
+
+  let geometry = new TextGeometry( 'Player '+ winner + ' Won!', {
+		font: font,
+    size: 0.1,
+    height: 0.01,
+	} );
+
   
-  reset();
+
+  let material = new THREE.MeshStandardMaterial({color: 0xFFFFFF});
+
+  winText = new Mesh(geometry, material);
+  winText.castShadow = true;
+  winText.position.x = -0.5;
+  winText.position.y = -0.025;
+  winText.rotateX(-Math.PI/2);
+
+  scene.add(winText);
+
+  gameStart = false;
+  inTurn = false;
+
 } //end of endGame
 
 /**
