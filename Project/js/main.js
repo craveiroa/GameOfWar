@@ -10,9 +10,11 @@ import { Vector3 } from 'three';
 
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+//Dom elements
+let gameCanvas = document.getElementById('game-of-war');
+
 //Graphics World
 let scene, camera, renderer;
-let gameCanvas = document.getElementById('gameOfWar');
 let orbitControls;
 let pointX;
 let pointZ;
@@ -71,14 +73,31 @@ function assetsCastShadow(obj) {
 
 /**
  * Preloads all assets (textures and models)
+ * 
+ * Above and beyond -> We use custom models from Blender using loader
+ * and we update a loading screen when complete.
+ * 
+ * Making loading Bar
+ * https://www.youtube.com/watch?v=zMzuPIiznQ4
  */
 function loadAssets() {
 
-  let loader = new GLTFLoader();
+let progressBar = document.getElementById('progress-bar')
+let loadingManager = new THREE.LoadingManager();
+
+loadingManager.onProgress = function(url, loaded, total) {
+  progressBar.value = (loaded/total) * 100;
+}
+
+let progressBarContainer = document.querySelector('.progress-bar-container');
+
+loadingManager.onLoad = function() {
+  progressBarContainer.style.display = 'none';
+}
+
+ let loader = new GLTFLoader(loadingManager);
 
  loader.load('../assets/models/pokerScene.gltf', function (gltf) {
-
-  console.log(gltf);
 
     let props = gltf.scene;
     props.position.y = -0.045;
@@ -88,23 +107,17 @@ function loadAssets() {
     
     let table = props.getObjectByName('Table');
     assetsCastShadow(table);
-    assetsReceiveShadow(table);
 
     let chair = props.getObjectByName('Chair');
     assetsCastShadow(chair);
-    assetsReceiveShadow(chair);
-    
 
     chair = props.getObjectByName('Chair001');
     assetsCastShadow(chair);
-    assetsReceiveShadow(chair);
 
     chair = props.getObjectByName('Chair002');
-    //assetsCastShadow(chair);
-    assetsReceiveShadow(chair);
+    assetsCastShadow(chair);  
   
-    let floor = props.getObjectByName('Floor');
-    assetsReceiveShadow(floor);
+    assetsReceiveShadow(props);
 
     scene.add(props);
 
@@ -209,7 +222,6 @@ function initGraphics() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
-  console.log(scene);
 } //end of initGraphics
 
 //Here We make our game :) 
@@ -251,8 +263,7 @@ async function startGame() {
   let i = 0;
   while (!startDeck.isEmpty()) {
 
-    let promise = transferCard(startDeck, playerDecks[i], 
-        Deck.addTop, TWEEN.Easing.Sinusoidal.In);
+    let promise = transferCardTop(startDeck, playerDecks[i], TWEEN.Easing.Sinusoidal.In);
     promiseArray.push(promise);
 
     i = (i + 1) % numPlayers;
@@ -292,9 +303,8 @@ async function startTurn() {
   if (playersInPlay.length == 1) {
     // If there is only one plr with cards, declare a winner.
     endGame(playersInPlay[0] + 1);
+    return;
   }
-
-  console.log(playersInPlay);
 
   // If there is more than one deck with cards remaining then 
   // play out a turn with those decks
@@ -303,7 +313,7 @@ async function startTurn() {
     let plr = playersInPlay[i];
 
     // Place top card on table
-    let promise = transferCard(playerDecks[plr], tableDecks[plr], undefined, TWEEN.Easing.Sinusoidal.In);
+    let promise = transferCardTop(playerDecks[plr], tableDecks[plr], TWEEN.Easing.Sinusoidal.In);
     promiseArray.push(promise);
     
   } //end of for
@@ -343,8 +353,6 @@ async function startTurn() {
 
   await setDelay(1000)
 
-  console.log(isWar);
-
   while (isWar) {
 
     greatestValue = -1;
@@ -356,7 +364,7 @@ async function startTurn() {
 
       for (let j = 0; j < 2; j++) {
         if (!playerDecks[plr].isEmpty()) {
-          let promise = transferCard(playerDecks[i], tableDecks[i], Deck.addTop, TWEEN.Easing.Exponential.In);
+          let promise = transferCardTop(playerDecks[i], tableDecks[i], TWEEN.Easing.Exponential.In);
           promiseArray.push(promise);
         } //end of if
         await setDelay(100);
@@ -404,7 +412,7 @@ async function startTurn() {
     let tabled = tableDecks[i];
 
     while (!tabled.isEmpty()) {
-      let promise = transferCard(tabled, winnerDeck, Deck.addBottom, TWEEN.Easing.Sinusoidal.In);
+      let promise = transferCardBottom(tabled, winnerDeck, TWEEN.Easing.Sinusoidal.In);
       promiseArray.push(promise);
       await setDelay(100);
     }
@@ -416,7 +424,6 @@ async function startTurn() {
   await Promise.all(promiseArray);
   promiseArray = [];
 
-  console.log(playerDecks);
   inTurn = false;
 } //end of startTurn
 
@@ -425,7 +432,8 @@ async function startTurn() {
  * Ends the game, typically when a player wins
  */
 function endGame(winner) {
-  console.log('I am player', winner, 'and I am better than everyone else');
+  
+  reset();
 } //end of endGame
 
 /**
@@ -441,7 +449,6 @@ function initController() {
           startTurn();
         else
           startGame();
-          
         break;
       case 'r':
       case 'R':
@@ -557,19 +564,7 @@ function toggleShadows() {
   })
 }
 
-function createTweenPromise(tween, onComplete) {
-  promiseArray.push(
-    new Promise(function (resolve) {
-      tween.onComplete((tween) => { 
-        tween.card.model.rotation.set(0, 0, 0);
-        tween.dest.addTop(tween.card);
-        resolve(tween);
-      });
-    }
-    ));
-}
-
-function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWEEN.Easing.Linear.None, delay = 0)
+function transferCardTop(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, delay = 0)
 {
   let card = startDeck.takeTop();
 
@@ -599,6 +594,54 @@ function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWE
 
   scene.add(card.model);
 
-  return createTweenPromise(tw, onComplete);
+  //create a promise to wait for
+  return new Promise(function (resolve) {
+    tw.onComplete((tw) => { 
+      tw.card.model.rotation.set(0, 0, 0);
+      tw.dest.addTop(tw.card);
+      resolve(tw);
+    });
+  });
+
+}
+
+function transferCardBottom(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, delay = 0)
+{
+  let card = startDeck.takeTop();
+
+  card.model.rotation.set(Math.PI / 2, 0, 0)
+
+  let beginX = startDeck.model.position.x;
+  let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
+  let beginZ = startDeck.model.position.z;
+
+  card.model.position.set( new Vector3(beginX, beginY, beginZ) );
+
+  let endX = endDeck.model.position.x;
+  let endY = endDeck.model.position.y;
+  let endZ = endDeck.model.position.z;
+
+  const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, dest: endDeck, card: card })
+    .to({ x: endX, y: endY, z: endZ }, 1000)
+    .easing(easing)
+    .delay(delay)
+    .onUpdate((tween) => {
+      tween.card.model.position.x = tween.x;
+      tween.card.model.position.y = tween.y;
+      tween.card.model.position.z = tween.z;
+    });
+
+  tw.start();
+
+  scene.add(card.model);
+
+  //create a promise to wait for
+  return new Promise(function (resolve) {
+    tw.onComplete((tw) => { 
+      tw.card.model.rotation.set(0, 0, 0);
+      tw.dest.addBottom(tw.card);
+      resolve(tw);
+    });
+  });
 
 }
