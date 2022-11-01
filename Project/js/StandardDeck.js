@@ -17,8 +17,10 @@ export class StandardDeck extends Deck {
         var cardTxtr = 1;
         var cardStr = 'assets/' + cardTxtr + '.jpg';
 
+        // load the corresponding front card texture
         for (let s = Constants.SPADES; s <= Constants.CLUBS; s++) {
             for (let v = 2; v < 15; v++) {
+                // make the sides of the card white
                 var material = new THREE.MeshBasicMaterial({
                     color: 0xFFFFFF
                 });
@@ -34,13 +36,13 @@ export class StandardDeck extends Deck {
                         map: textureLoader.load('assets/card_back.jpg'),
                     }),
                 ];
+                // create a new card object with the mesh that has loaded the card face textures
                 this.addTop(new Card(v, s, materials));
                 cardTxtr++;
                 cardStr = 'assets/' + cardTxtr + '.jpg';
             }
         }
     }
-
 }
 
 

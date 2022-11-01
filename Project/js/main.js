@@ -36,6 +36,7 @@ let list = document.getElementById("myList");
 //Promise Stuff
 let promiseArray = [];
 
+// This function makes sure all animations are completed before proceeding with more logic
 function createTweenPromise(tween, onComplete) {
   promiseArray.push(
     new Promise(function (resolve) {
@@ -48,6 +49,7 @@ function createTweenPromise(tween, onComplete) {
     ));
 }
 
+// This function moves a Card object between two different Deck objects.
 function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWEEN.Easing.Linear.None, delay = 0) {
   let card = startDeck.takeTop();
 
@@ -63,6 +65,7 @@ function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWE
   let endY = endDeck.model.position.y + card.DIMENSIONS.z * (endDeck.getSize());
   let endZ = endDeck.model.position.z;
 
+  // the tween animation itself
   const tw = new TWEEN.Tween({ x: beginX, y: beginY, z: beginZ, dest: endDeck, card: card })
     .to({ x: endX, y: endY, z: endZ }, d3)
     .easing(easing)
@@ -78,7 +81,6 @@ function transferCard(startDeck, endDeck, onComplete = Deck.addTop, easing = TWE
   scene.add(card.model);
 
   return createTweenPromise(tw, onComplete);
-
 }
 
 /**
@@ -134,8 +136,6 @@ function initGraphics() {
   pointLight.shadow.mapSize.height = 2000;
   scene.add(pointLight);
 
-  // Game models
-
   //Table
 
   var textureLoader = new THREE.TextureLoader();
@@ -151,6 +151,7 @@ function initGraphics() {
 
   //Decks
 
+  // add the 52 cards
   startDeck = new StandardDeck();
   scene.add(startDeck.model);
 
@@ -158,6 +159,7 @@ function initGraphics() {
   let outerRadius = 0.5;
   let innerRadius = 0.25;
 
+  // set up all of the decks and their locations for each player based on the number of players
   for (let i = 0; i < numPlayers; i++) {
     let hand = new Deck();
     playerDecks.push(hand);
@@ -174,8 +176,7 @@ function initGraphics() {
     scene.add(tabled.model);
 
     playersInPlay.push(i);
-
-  }//end of for
+  }
 
   // Orbit controls
 
@@ -228,6 +229,7 @@ async function startGame() {
 
   startDeck.shuffle();
 
+  // deal an even number of cards to each player's hand from the starting deck
   let i = 0;
   while (!startDeck.isEmpty()) {
 
@@ -244,8 +246,10 @@ async function startGame() {
 
   inTurn = false;
 
+  // clear the old card card counter values which keeps track of how many cards are remaining for each player
   list.innerHTML = '';
 
+  // update the card counter values
   for (let i = 0; i < playerDecks.length; i++) {
     let li = document.createElement("li");
     li.innerText = 'Player ' + (i + 1) + ': ' + playerDecks[i].getSize();
@@ -269,7 +273,6 @@ async function startTurn() {
   inTurn = true;
 
   // Remove players from play with no cards
-
   for (let i = 0; i < playersInPlay.length; i++) {
     let plr = playersInPlay[i];
 
@@ -297,11 +300,10 @@ async function startTurn() {
     let promise = transferCard(playerDecks[plr], tableDecks[plr], undefined, TWEEN.Easing.Sinusoidal.In);
     promiseArray.push(promise);
 
-  } //end of for
+  }
 
   await Promise.all(promiseArray);
   promiseArray = [];
-
 
   // Flip each card face up
   playersInPlay.forEach((plr) => {
@@ -315,6 +317,7 @@ async function startTurn() {
   let greatestValue = -1;
   let winningPlr = -1; //plr with greatest card
 
+  // keep track of which player has the highest card placed down and what that card is
   playersInPlay.forEach((plr) => {
     let topCard = tableDecks[plr].peekTop();
 
@@ -328,11 +331,10 @@ async function startTurn() {
     }
   });
 
+  // flip each card face down
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopDown();
   });
-
-  console.log(isWar);
 
   while (isWar) {
 
@@ -343,26 +345,29 @@ async function startTurn() {
     for (let i = 0; i < playersInPlay.length; i++) {
       let plr = playersInPlay[i];
 
+      // have each player place down 2 more cards
+      // if they dont have 2 cards remaining, place how many they have left, if any
       for (let j = 0; j < 2; j++) {
         if (!playerDecks[plr].isEmpty()) {
-          console.log(playerDecks[plr]);
           let promise = transferCard(playerDecks[plr], tableDecks[plr], Deck.addTop, TWEEN.Easing.Sinusoidal.In);
           promiseArray.push(promise);
           await setDelay(d1);
-        } //end of if
-      } //end of nested for
-
-    } //end  of for
+        }
+      }
+    }
 
     await Promise.all(promiseArray);
     promiseArray = [];
 
+    // flip each player's second extra war card face up
     playersInPlay.forEach((plr) => {
       tableDecks[plr].flipTopUp();
     });
 
     await setDelay(d2)
 
+    // compare each players top card as if it were a normal turn, keeping track of the highest card 
+    // and the player with that card
     playersInPlay.forEach((plr) => {
 
       let topCard = tableDecks[plr].peekTop();
@@ -376,15 +381,14 @@ async function startTurn() {
         isWar = true;
       }
     });
+  }
 
-  } //end of while
-
+  // flip the cards facedown in preparation to be put in the winners hand
   playersInPlay.forEach((plr) => {
     tableDecks[plr].flipTopDown();
   });
 
   await setDelay(d3)
-
 
   //move all cards on table to winners deck
   let winnerDeck = playerDecks[winningPlr];
@@ -403,16 +407,15 @@ async function startTurn() {
     await setDelay(d1);
   }
 
-
   await Promise.all(promiseArray);
   promiseArray = [];
 
   inTurn = false;
 
-
-
+  // clear the old card card counter values which keeps track of how many cards are remaining for each player
   list.innerHTML = '';
 
+  // update the card counter values
   for (let i = 0; i < playerDecks.length; i++) {
     let li = document.createElement("li");
     li.innerText = 'Player ' + (i + 1) + ': ' + playerDecks[i].getSize();
@@ -424,8 +427,6 @@ async function startTurn() {
     list.appendChild(li);
   }
 
-
-  console.log(playersInPlay)
 } //end of startTurn
 
 
@@ -519,10 +520,12 @@ function render() {
 
 main();
 
+// this function allows us to pause the program for some time, used in this context for letting animations complete
 function setDelay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
+// this function allows the point light to be moved with key presses
 function movePointLight(key) {
   if (key == 'W') {
     pointZ -= 0.25;
@@ -542,6 +545,7 @@ function movePointLight(key) {
   }
 }
 
+// this function turns the ambient light on and off
 function toggleAmbient() {
   ambientOn = !ambientOn;
 
@@ -553,6 +557,7 @@ function toggleAmbient() {
   }
 }
 
+// this function turns the point light on and off
 function togglePoint() {
   pointOn = !pointOn;
 
@@ -564,6 +569,7 @@ function togglePoint() {
   }
 }
 
+// this function turns the shadows on and off
 function toggleShadows() {
   renderer.shadowMap.enabled = !renderer.shadowMap.enabled;
   scene.traverse(function (child) {
@@ -573,12 +579,14 @@ function toggleShadows() {
   })
 }
 
+// this function halves the values used for the delays and animations, making the game go quicker
 function fasterGame() {
   d1 /= 2;
   d2 /= 2;
   d3 /= 2;
 }
 
+// this function double the values used for the delays and animations, making the game go slower
 function slowerGame() {
   d1 *= 2;
   d2 *= 2;
