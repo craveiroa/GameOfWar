@@ -26,7 +26,7 @@ let startDeck;
 let playerDecks = []; //players hands
 let tableDecks = []; //players cards on table
 let playersInPlay = [];
-let numPlayers = 12;
+let numPlayers = 3;
 let gameStart = false;
 let inTurn = false;
 
@@ -46,6 +46,29 @@ function main() {
 
 } //end of main
 
+
+function assetsReceiveShadow(obj) {
+  if (obj.children.length == 0)
+  {
+    obj.receiveShadow = true;
+  }
+  else 
+  {
+    obj.children.forEach(assetsReceiveShadow);
+  }
+}
+
+function assetsCastShadow(obj) {
+  if (obj.children.length == 0)
+  {
+    obj.castShadow = true;
+  }
+  else 
+  {
+    obj.children.forEach(assetsCastShadow);
+  }
+}
+
 /**
  * Preloads all assets (textures and models)
  */
@@ -61,7 +84,28 @@ function loadAssets() {
     props.position.y = -0.045;
     props.scale.setX(0.6);
     props.scale.setZ(0.6);
-    props.scale.setY(0.6)
+    props.scale.setY(0.6);
+    
+    let table = props.getObjectByName('Table');
+    assetsCastShadow(table);
+    assetsReceiveShadow(table);
+
+    let chair = props.getObjectByName('Chair');
+    assetsCastShadow(chair);
+    assetsReceiveShadow(chair);
+    
+
+    chair = props.getObjectByName('Chair001');
+    assetsCastShadow(chair);
+    assetsReceiveShadow(chair);
+
+    chair = props.getObjectByName('Chair002');
+    //assetsCastShadow(chair);
+    assetsReceiveShadow(chair);
+  
+    let floor = props.getObjectByName('Floor');
+    assetsReceiveShadow(floor);
+
     scene.add(props);
 
     /*
@@ -110,11 +154,16 @@ function initGraphics() {
   pointX = 0;
   pointZ = 0;
   pointLight = new THREE.PointLight(0xFFFFFF, 1);
-  pointLight.position.set(0, 2, 0);
+  pointLight.position.set(0, 3, 0);
   pointLight.castShadow = true;
-  pointLight.shadow.mapSize.width = 2000;
-  pointLight.shadow.mapSize.height = 2000;
+  pointLight.shadow.bias = - 0.00005;
+  pointLight.shadow.mapSize.width = 1024;
+  pointLight.shadow.mapSize.height = 1024;
   scene.add(pointLight);
+
+  const sphereSize = 1;
+  const pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
+  scene.add( pointLightHelper ) 
 
   // Game models
 
@@ -158,6 +207,7 @@ function initGraphics() {
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(gameCanvas.clientWidth, gameCanvas.clientHeight);
   renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   console.log(scene);
 } //end of initGraphics
@@ -460,19 +510,19 @@ function setDelay(time) {
 function movePointLight(key) {
   if (key == 'W') {
     pointZ -= 0.25;
-    pointLight.position.set(pointX, 2, pointZ);
+    pointLight.position.set(pointX, pointLight.position.y, pointZ);
   }
   else if (key == 'A') {
     pointX -= 0.25;
-    pointLight.position.set(pointX, 2, pointZ);
+    pointLight.position.set(pointX, pointLight.position.y, pointZ);
   }
   else if (key == 'S') {
     pointZ += 0.25;
-    pointLight.position.set(pointX, 2, pointZ);
+    pointLight.position.set(pointX, pointLight.position.y, pointZ);
   }
   else {
     pointX += 0.25;
-    pointLight.position.set(pointX, 2, pointZ);
+    pointLight.position.set(pointX, pointLight.position.y, pointZ);
   }
 }
 
