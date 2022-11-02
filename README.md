@@ -13,3 +13,12 @@
 4. Type npm install into terminal
 5. Type npm run dev into terminal
 6. Open http://127.0.0.1:5173/ 
+
+## Controls
+- WASD -> move pointlight
+- N -> Progress Game
+- L -> Toggle Ambient Light
+- P -> Toggle Point Light
+- M -> Toggle Shadows
+- F -> Speed Game Up By Factor of 2
+- G -> Slow Game Down By Factor of 2
