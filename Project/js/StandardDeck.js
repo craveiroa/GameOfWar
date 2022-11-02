@@ -20,8 +20,7 @@ export class StandardDeck extends Deck {
         // load the corresponding front card texture
         for (let s = Constants.SPADES; s <= Constants.CLUBS; s++) {
             for (let v = 2; v < 15; v++) {
-                // make the sides of the card white
-                var material = new THREE.MeshBasicMaterial({
+                var material = new THREE.MeshStandardMaterial({
                     color: 0xFFFFFF
                 });
                 const materials = [
@@ -29,10 +28,10 @@ export class StandardDeck extends Deck {
                     material,
                     material,
                     material,
-                    new THREE.MeshBasicMaterial({
+                    new THREE.MeshStandardMaterial({
                         map: textureLoader.load(cardStr),
                     }),
-                    new THREE.MeshBasicMaterial({
+                    new THREE.MeshStandardMaterial({
                         map: textureLoader.load('assets/card_back.jpg'),
                     }),
                 ];
