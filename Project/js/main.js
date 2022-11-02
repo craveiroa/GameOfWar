@@ -15,6 +15,7 @@ import {TextGeometry} from 'three/examples/jsm/geometries/TextGeometry';
 
 //Dom elements
 let gameCanvas = document.getElementById('game-of-war');
+let audio = document.getElementById("music"); //Chrome dont like when music play, so make sure to click!
 
 //Graphics World
 let scene, camera, renderer;
@@ -139,7 +140,7 @@ loadingManager.onLoad = function() {
     scene.add(table);
     */
   
-    let audio = document.getElementById("music");
+    
     audio.play();
 
   }, undefined, function (error) {
@@ -181,12 +182,12 @@ function initGraphics() {
 
   //Lighting
 
-  ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
   scene.add(ambientLight);
 
   pointX = 0;
   pointZ = 0;
-  pointLight = new THREE.PointLight(0xFFFFFF, 1);
+  pointLight = new THREE.PointLight(0xFFFFFF, 0.6);
   pointLight.position.set(0, 3, 0);
   pointLight.castShadow = true;
   pointLight.shadow.bias = - 0.00005;
@@ -194,7 +195,7 @@ function initGraphics() {
   pointLight.shadow.mapSize.height = 2048;
   scene.add(pointLight);
 
-  let spotLight = new THREE.SpotLight(0xFFFFFF, 1, undefined, Math.PI/6);
+  let spotLight = new THREE.SpotLight(0xFFFFFF, 0.3, undefined, Math.PI/6);
   spotLight.position.set(0, 3, 0);
   spotLight.castShadow = true;
   spotLight.shadow.bias = - 0.00005;
@@ -645,7 +646,7 @@ function togglePoint() {
   pointOn = !pointOn;
 
   if (pointOn) {
-    pointLight.intensity = 1;
+    pointLight.intensity = 0.6;
   }
   else {
     pointLight.intensity = 0;
