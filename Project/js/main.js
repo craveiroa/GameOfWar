@@ -109,7 +109,7 @@ loadingManager.onLoad = function() {
  loader.load('../assets/models/pokerScene.gltf', function (gltf) {
 
     let props = gltf.scene;
-    props.position.y = -0.045;
+    props.position.y = -0.03;
     props.scale.setX(0.6);
     props.scale.setZ(0.6);
     props.scale.setY(0.6);
