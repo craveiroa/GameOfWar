@@ -201,6 +201,7 @@ function initGraphics() {
   spotLight.shadow.mapSize.width = 2048;
   spotLight.shadow.mapSize.height = 2048;
   scene.add(spotLight);
+  
 
   // Game models
 
@@ -694,6 +695,7 @@ function toggleShadows() {
     if (child.material) {
       child.material.needsUpdate = true;
     }
+    child.castShadow = !child.castShadow;
   })
 }
 
