@@ -6,7 +6,7 @@ import { Deck } from './Deck.js';
 import { StandardDeck } from './StandardDeck.js';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { LoadingManager, Mesh, MeshStandardMaterial, Vector3 } from 'three';
+import { Mesh, Vector3 } from 'three';
 
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
@@ -139,6 +139,9 @@ loadingManager.onLoad = function() {
     scene.add(table);
     */
   
+    let audio = document.getElementById("music");
+    audio.play();
+
   }, undefined, function (error) {
   
     console.error(error);
@@ -190,6 +193,14 @@ function initGraphics() {
   pointLight.shadow.mapSize.width = 2048;
   pointLight.shadow.mapSize.height = 2048;
   scene.add(pointLight);
+
+  let spotLight = new THREE.SpotLight(0xFFFFFF, 1, undefined, Math.PI/6);
+  spotLight.position.set(0, 3, 0);
+  spotLight.castShadow = true;
+  spotLight.shadow.bias = - 0.00005;
+  spotLight.shadow.mapSize.width = 2048;
+  spotLight.shadow.mapSize.height = 2048;
+  scene.add(spotLight);
 
   // Game models
 

@@ -27,3 +27,9 @@ label {
   color: white;
   font-size: 2rem;
 }
+
+p {
+  color: white;
+  display: inline;
+  font-size: 1rem;
+}
