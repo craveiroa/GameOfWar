@@ -11,7 +11,7 @@ import { Mesh, Vector3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 
-import {TextGeometry} from 'three/examples/jsm/geometries/TextGeometry';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 
 //Dom elements
 let gameCanvas = document.getElementById('game-of-war');
@@ -60,23 +60,19 @@ function main() {
 
 
 function assetsReceiveShadow(obj) {
-  if (obj.children.length == 0)
-  {
+  if (obj.children.length == 0) {
     obj.receiveShadow = true;
   }
-  else 
-  {
+  else {
     obj.children.forEach(assetsReceiveShadow);
   }
 }
 
 function assetsCastShadow(obj) {
-  if (obj.children.length == 0)
-  {
+  if (obj.children.length == 0) {
     obj.castShadow = true;
   }
-  else 
-  {
+  else {
     obj.children.forEach(assetsCastShadow);
   }
 }
@@ -92,29 +88,29 @@ function assetsCastShadow(obj) {
  */
 function loadAssets() {
 
-let progressBar = document.getElementById('progress-bar')
-let loadingManager = new THREE.LoadingManager();
+  let progressBar = document.getElementById('progress-bar')
+  let loadingManager = new THREE.LoadingManager();
 
-loadingManager.onProgress = function(url, loaded, total) {
-  progressBar.value = (loaded/total) * 100;
-}
+  loadingManager.onProgress = function (url, loaded, total) {
+    progressBar.value = (loaded / total) * 100;
+  }
 
-let progressBarContainer = document.querySelector('.progress-bar-container');
+  let progressBarContainer = document.querySelector('.progress-bar-container');
 
-loadingManager.onLoad = function() {
-  progressBarContainer.style.display = 'none';
-}
+  loadingManager.onLoad = function () {
+    progressBarContainer.style.display = 'none';
+  }
 
- let loader = new GLTFLoader(loadingManager);
+  let loader = new GLTFLoader(loadingManager);
 
- loader.load('../assets/models/pokerScene.gltf', function (gltf) {
+  loader.load('../assets/models/pokerScene.gltf', function (gltf) {
 
     let props = gltf.scene;
     props.position.y = -0.03;
     props.scale.setX(0.6);
     props.scale.setZ(0.6);
     props.scale.setY(0.6);
-    
+
     let table = props.getObjectByName('Table');
     assetsCastShadow(table);
 
@@ -125,34 +121,24 @@ loadingManager.onLoad = function() {
     assetsCastShadow(chair);
 
     chair = props.getObjectByName('Chair002');
-    assetsCastShadow(chair);  
-  
+    assetsCastShadow(chair);
+
     assetsReceiveShadow(props);
 
     scene.add(props);
-
-    /*
-    table = gltf.scene.children[0];
-    table.position.y = -0.045;
-    table.scale.setX(0.6);
-    table.scale.setZ(0.6);
-    table.receiveShadow = true;
-    scene.add(table);
-    */
   
-    
     audio.play();
 
   }, undefined, function (error) {
-  
+
     console.error(error);
-  
+
   });
 
   //load the font for later use
   let fontLoader = new FontLoader(loadingManager);
 
-  fontLoader.load( 'node_modules/three/examples/fonts/helvetiker_bold.typeface.json', function (f) {
+  fontLoader.load('node_modules/three/examples/fonts/helvetiker_bold.typeface.json', function (f) {
     font = f;
     console.log(font);
   });
@@ -257,7 +243,7 @@ function initGraphics() {
  */
 function reset() {
 
-  if(inTurn)
+  if (inTurn)
     return;
 
   scene.remove(startDeck.model);
@@ -318,7 +304,7 @@ async function startGame() {
     let li = document.createElement("li");
     li.innerText = 'Player ' + (i + 1) + ': ' + playerDecks[i].getSize();
     li.style.color = "white";
-    li.style.fontSize = "10px";
+    li.style.fontSize = "1rem";
     li.style.listStyleType = "none";
     li.style.display = "inline";
     li.style.marginRight = "1vw";
@@ -499,21 +485,21 @@ async function startTurn() {
  */
 function endGame(winner) {
 
-  let geometry = new TextGeometry( 'Player '+ winner + ' Won!', {
-		font: font,
+  let geometry = new TextGeometry('Player ' + winner + ' Won!', {
+    font: font,
     size: 0.1,
     height: 0.01,
-	} );
+  });
 
-  
 
-  let material = new THREE.MeshStandardMaterial({color: 0xFFFFFF});
+
+  let material = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
 
   winText = new Mesh(geometry, material);
   winText.castShadow = true;
   winText.position.x = -0.5;
   winText.position.y = -0.025;
-  winText.rotateX(-Math.PI/2);
+  winText.rotateX(-Math.PI / 2);
 
   scene.add(winText);
 
@@ -677,8 +663,7 @@ function slowerGame() {
   d3 *= 2;
 }
 
-function transferCardTop(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, delay = 0)
-{
+function transferCardTop(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, delay = 0) {
   let card = startDeck.takeTop();
 
   card.model.rotation.set(Math.PI / 2, 0, 0)
@@ -687,7 +672,7 @@ function transferCardTop(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, 
   let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
   let beginZ = startDeck.model.position.z;
 
-  card.model.position.set( new Vector3(beginX, beginY, beginZ) );
+  card.model.position.set(new Vector3(beginX, beginY, beginZ));
 
   let endX = endDeck.model.position.x;
   let endY = endDeck.model.position.y + card.DIMENSIONS.z * (endDeck.getSize());
@@ -709,7 +694,7 @@ function transferCardTop(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, 
 
   //create a promise to wait for
   return new Promise(function (resolve) {
-    tw.onComplete((tw) => { 
+    tw.onComplete((tw) => {
       tw.card.model.rotation.set(0, 0, 0);
       tw.dest.addTop(tw.card);
       resolve(tw);
@@ -718,8 +703,7 @@ function transferCardTop(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, 
 
 }
 
-function transferCardBottom(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, delay = 0)
-{
+function transferCardBottom(startDeck, endDeck, easing = TWEEN.Easing.Linear.None, delay = 0) {
   let card = startDeck.takeTop();
 
   card.model.rotation.set(Math.PI / 2, 0, 0)
@@ -728,7 +712,7 @@ function transferCardBottom(startDeck, endDeck, easing = TWEEN.Easing.Linear.Non
   let beginY = startDeck.model.position.y + card.DIMENSIONS.z * (startDeck.getSize() + 1);
   let beginZ = startDeck.model.position.z;
 
-  card.model.position.set( new Vector3(beginX, beginY, beginZ) );
+  card.model.position.set(new Vector3(beginX, beginY, beginZ));
 
   let endX = endDeck.model.position.x;
   let endY = endDeck.model.position.y;
@@ -750,7 +734,7 @@ function transferCardBottom(startDeck, endDeck, easing = TWEEN.Easing.Linear.Non
 
   //create a promise to wait for
   return new Promise(function (resolve) {
-    tw.onComplete((tw) => { 
+    tw.onComplete((tw) => {
       tw.card.model.rotation.set(0, 0, 0);
       tw.dest.addBottom(tw.card);
       resolve(tw);
