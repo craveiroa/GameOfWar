@@ -1,3 +1,17 @@
+/**
+ * Main source code for our project
+ * --------------------------------
+ * 
+ * Author: Tones and Owne
+ * 
+ * ABOVE AND BEYOND
+ * a) Audio
+ * b) ScoreKeeping With DOM
+ * c) LoadingManager + Loading Screen
+ * d) Using Custom Assets from Blender
+ * 
+ */
+
 import '../style.css';
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js'
@@ -534,8 +548,6 @@ function endGame(winner) {
   winText = new Mesh(geometry, material);
   winText.castShadow = true;
   winText.position.x = -0.5;
-  winText.position.y = -0.025;
-  winText.rotateX(-Math.PI / 2);
 
   scene.add(winText);
 
