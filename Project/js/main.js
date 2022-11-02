@@ -152,7 +152,6 @@ function loadAssets() {
     console.log(font);
   });
 
-
 } //end of loadAssets
 
 /**
@@ -242,6 +241,43 @@ function initGraphics() {
   renderer.setSize(gameCanvas.clientWidth, gameCanvas.clientHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
+  // wall painting
+  var textureLoader = new THREE.TextureLoader();
+  var material = new THREE.MeshStandardMaterial({
+    color: 0xFFFFFF
+  });
+  const frameMaterials = [
+    material,
+    material,
+    material,
+    material,
+    new THREE.MeshStandardMaterial({
+      map: textureLoader.load('assets/frame.jpeg'),
+    }),
+    material,
+  ];
+  const frameBox = new THREE.BoxGeometry(0.25, 0.25, 0.01);
+  const frame = new THREE.Mesh(frameBox, frameMaterials);
+  frame.position.setZ(-3.95);
+  frame.position.setY(3);
+  scene.add(frame);
+
+  const materials = [
+    material,
+    material,
+    material,
+    material,
+    new THREE.MeshStandardMaterial({
+      map: textureLoader.load('assets/framedstuetzleart.jpeg'),
+    }),
+    material,
+  ];
+  const paint = new THREE.BoxGeometry(0.2, 0.2, 0.01);
+  const painting = new THREE.Mesh(paint, materials);
+  painting.position.setZ(-3.94);
+  painting.position.setY(3);
+  scene.add(painting);
 
 } //end of initGraphics
 
